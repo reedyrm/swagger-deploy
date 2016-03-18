@@ -44,12 +44,12 @@ gulp.task('build:lint', () => {
     .pipe(plugins.jshint.reporter('fail'));
 });
 
-gulp.task('test:testConsole', () => {
+gulp.task('test:unit:Console', () => {
   return gulp.src('test/**/*.js', {read: false})
     .pipe(mocha({compilers: 'js:babel-core/register'}));
 });
 
-gulp.task('test:testTeamCity', () => {
+gulp.task('test:unit:TeamCity', () => {
   return gulp.src('test/**/*.js', {read: false})
     .pipe(mocha({reporter: 'mocha-teamcity-reporter', compilers: 'js:babel-core/register'}));
 });
