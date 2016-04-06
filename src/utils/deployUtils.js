@@ -339,7 +339,7 @@ class DeployUtils {
         stageName: constants.env.INTEGRATION.ShortName,
         patchOperations: patches
       };
-      
+      tsm.progressMessage(`updateStage params: ${JSON.stringify(params)}`);
       apiGateway.updateStage(params, function (err, data) {
         if (err) {
           let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
@@ -394,7 +394,7 @@ class DeployUtils {
         stageName: constants.env.PRODUCTION.ShortName,
         patchOperations: patches
       };
-
+      tsm.progressMessage(`updateStage params: ${JSON.stringify(params)}`);
       apiGateway.updateStage(params, function (err, data) {
         if (err) {
           let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
