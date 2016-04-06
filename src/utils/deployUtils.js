@@ -327,9 +327,10 @@ class DeployUtils {
             path: '/*/*/logging/dataTrace',
             value: 'true'
           }];
-        
+      tsm.progressMessage(`patch updates before concat: ${patches}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
-      patches.concat(blackListed);
+      patches.concat(blackListed);      
+      tsm.progressMessage(`patch updates after concat: ${patches}`);
       
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
       let params = {
@@ -380,9 +381,10 @@ class DeployUtils {
           value: 'true'
         }];
 
+      tsm.progressMessage(`patch updates before concat: ${patches}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
-      patches.concat(blackListed);
-
+      patches.concat(blackListed);      
+      tsm.progressMessage(`patch updates after concat: ${patches}`);
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
 
       let params = {
