@@ -329,6 +329,7 @@ class DeployUtils {
           }];
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
+      tsm.progressMessage(`black listed patch updates: ${JSON.stringify(patches)}`);
       patches.concat(blackListed);      
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
       
@@ -383,6 +384,7 @@ class DeployUtils {
 
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
+      tsm.progressMessage(`black listed patch updates: ${JSON.stringify(patches)}`);
       patches.concat(blackListed);      
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
