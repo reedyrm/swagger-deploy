@@ -299,6 +299,58 @@ class DeployUtils {
       });
     }).asCallback(callback);
   };
+  
+  configureApiGatewaySettingsForInt2(restApiId, callback) {
+    return new Promise((resolve, reject) => {
+      tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
+      let apiGatewayParams = {
+        apiVersion: '2015-07-09',
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
+        sslEnabled: true,
+        region: this._region
+      };
+
+      let patches = [
+        {
+            op: 'replace',
+            path: '/*/*/logging/loglevel',
+            value: 'INFO'
+          },
+          {
+            op: 'replace',
+            path: '/*/*/metrics/enabled',
+            value: 'false'
+          },
+          {
+            op: 'replace',
+            path: '/*/*/logging/dataTrace',
+            value: 'true'
+          }];
+        
+      let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
+      patches.concat(blackListed);
+      
+      let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let params = {
+        restApiId: restApiId,
+        stageName: constants.env.INTEGRATION.ShortName,
+        patchOperations: patches
+      };
+      
+      apiGateway.updateStage(params, function (err, data) {
+        if (err) {
+          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
+          tsm.message({text: errorMessage});
+          reject({message: errorMessage});
+        } else {
+          tsm.message({text: `${JSON.stringify(data)}`});
+          tsm.progressFinish(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
+          resolve();
+        }
+      });
+    }).asCallback(callback);
+  };
 
   configureApiGatewaySettingsForProd2(restApiId, blacklistedPaths, callback) {
     return new Promise((resolve, reject) => {
