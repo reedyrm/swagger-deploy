@@ -300,7 +300,7 @@ class DeployUtils {
     }).asCallback(callback);
   };
   
-  configureApiGatewaySettingsForInt2(restApiId, callback) {
+  configureApiGatewaySettingsForInt2(restApiId, blacklistedPaths, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
       let apiGatewayParams = {
