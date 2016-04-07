@@ -327,6 +327,8 @@ class DeployUtils {
             path: '/*/*/logging/dataTrace',
             value: 'true'
           }];
+          
+      tsm.progressMessage(`paths to be disabled: ${JSON.stringify(blacklistedPaths)}`);
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
       tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
@@ -381,7 +383,8 @@ class DeployUtils {
           path: '/*/*/logging/dataTrace',
           value: 'true'
         }];
-
+      
+      tsm.progressMessage(`paths to be disabled: ${JSON.stringify(blacklistedPaths)}`);
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
       tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
