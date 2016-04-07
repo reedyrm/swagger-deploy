@@ -422,9 +422,9 @@ class DeployUtils {
         path: blacklistedPaths[i],
         value: 'false'
       });
-
-      return jsonArr;
     }
+      return jsonArr;
+    
   };
 
   createBasePathMapping(stageName, domainName, apiGatewayId, apiBasePath, callback) {
