@@ -8,6 +8,11 @@ module.exports = (function(){
         ShortName: "int",
         Host: "dev.api.material.com"
       },
+      SANDBOX: {
+        FullName: "Sandbox",
+        ShortName: "sand",
+        Host: "sandbox.api.material.com"
+      },
       PRODUCTION: {
         FullName: "Production",
         ShortName: "prod",
