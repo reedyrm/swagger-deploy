@@ -36,6 +36,13 @@ class DeployUtils {
       constants.env.INTEGRATION.FullName,
       callback);
   }
+  
+  deployApiGatewayToSandbox(apiGatewayId, callback) {
+    this._deployApiGatewayToStage(apiGatewayId,
+      constants.env.SANDBOX.ShortName,
+      constants.env.SANDBOX.FullName,
+      callback);
+  }
 
   deployApiGatewayToProd(apiGatewayId, callback) {
     this._deployApiGatewayToStage(apiGatewayId,
@@ -593,6 +600,123 @@ class DeployUtils {
       });
   }
 
+
+  /**
+   *
+   * @param parameters
+   * @param parameters.apiGatewayId
+   * @param parameters.originName Name of the CloudFront Origin
+   * @param parameters.cname CNAME of the cloudfront distribution
+   * @param parameters.gatewayPathRegex
+   * @returns {Promise.<T>}
+   */
+  connectGatewayToCloudFrontForSandStage(parameters) {
+    let params = parameters || {};
+
+    let cname = params.cname || constants.env.SANDBOX.Host;
+    let originId = params.originName || uuid.v4().replace(/-/g, '');
+    let apiGatewayDomainName = `${params.apiGatewayId}.execute-api.us-east-1.amazonaws.com`;
+    let apiGatewayPath = '/sand';
+
+    let originDefintion = {
+      DomainName: apiGatewayDomainName, /* required */
+      OriginPath: apiGatewayPath,
+      Id: originId, /* required */
+      CustomHeaders: {
+        Quantity: 0,
+        Items: []
+      },
+      CustomOriginConfig: {
+        HTTPPort: 80, /* required */
+        HTTPSPort: 443, /* required */
+        OriginProtocolPolicy: 'https-only', /* required */
+        OriginSslProtocols: {
+          Items: [/* required */
+            'TLSv1',
+            'TLSv1.1',
+            'TLSv1.2'
+          ],
+          Quantity: 3 /* required */
+        }
+      }
+    };
+
+    let cacheBehaviorDefintion = {
+      ForwardedValues: {
+        /* required */
+        Cookies: {
+          /* required */
+          Forward: 'none', /* required */
+          WhitelistedNames: {
+            Quantity: 0, /* required */
+            Items: []
+          }
+        },
+        QueryString: true, /* required */
+        Headers: {
+          Quantity: 4, /* required */
+          Items: [
+            'x-vol-tenant',
+            'x-vol-test',
+            'accept',
+            'authorization'
+          ]
+        }
+      },
+      MinTTL: 0, /* required */
+      PathPattern: params.gatewayPathRegex, /* required */
+      TargetOriginId: originId, /* required */
+      TrustedSigners: {
+        /* required */
+        Enabled: false, /* required */
+        Quantity: 0, /* required */
+        Items: []
+      },
+      ViewerProtocolPolicy: 'redirect-to-https', /* required */
+      AllowedMethods: {
+        Items: [/* required */
+          'GET',
+          'HEAD',
+          'POST',
+          'PUT',
+          'PATCH',
+          'OPTIONS',
+          'DELETE'
+        ],
+        Quantity: 7, /* required */
+        CachedMethods: {
+          Items: [/* required */
+            'GET',
+            'HEAD',
+            'OPTIONS'
+          ],
+          Quantity: 3 /* required */
+        }
+      },
+      Compress: true,
+      DefaultTTL: 0,
+      MaxTTL: 0,
+      SmoothStreaming: false
+    };
+
+    console.log(`Retrieving CloudFront Distribution [CNAME: ${cname}]`);
+
+    return this._cloudFrontService.getDistributionByCName(cname).then((distribution) => {
+        if (__.isEmpty(distribution)) {
+          throw new Error("Distribution not found!");
+        }
+
+        this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
+          if (err) console.log(err);
+          else console.log(data);
+        });
+      })
+      .catch(err => {
+        console.log(err);
+        throw err;
+      });
+  }
+  
   /**
    *
    * @param parameters
