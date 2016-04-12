@@ -88,18 +88,6 @@ describe('When accessing deployUtils class', function() {
     expect(DeployUtils.findApiBasePathMapping).to.be.a('function');
   });
 
-  it('should have a function for configureApiGatewaySettingsForProd', () => {
-    let DeployUtils = new module.deployUtilsClass({});
-
-    expect(DeployUtils.configureApiGatewaySettingsForProd).to.be.a('function');
-  });
-
-  it('should have a function for configureApiGatewaySettingsForInt', () => {
-    let DeployUtils = new module.deployUtilsClass({});
-
-    expect(DeployUtils.configureApiGatewaySettingsForInt).to.be.a('function');
-  });
-
   it('should have a function for createBasePathMapping', () => {
     let DeployUtils = new module.deployUtilsClass({});
 
