@@ -309,7 +309,7 @@ class DeployUtils {
   
   configureApiGatewaySettings(stageName, restApiId, whitelistedPatchOps, blacklistedPatchOps, callback) {
     return new Promise((resolve, reject) => {
-      tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
+      tsm.progressStart(`Configuring Api Gateway Settings for [stageName: ${stageName}]. [ApiGatewayId: ${restApiId}]`);
       let apiGatewayParams = {
         apiVersion: '2015-07-09',
         accessKeyId: this._accessKey,
