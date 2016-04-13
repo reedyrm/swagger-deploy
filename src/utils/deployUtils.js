@@ -229,7 +229,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName, restApiId, patchOps, callback);
+    return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
   configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes = [], callback) {
@@ -250,7 +250,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    return _configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName, restApiId, patchOps, callback);
+    return _configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
   configureApiGatewaySettingsForProd(restApiId, whitelistedRoutes = [], callback) {
@@ -271,7 +271,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    return _configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName, restApiId, patchOps, callback);
+    return _configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
   _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
