@@ -211,7 +211,7 @@ class DeployUtils {
     });
   };
 
-  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes ,callback) {
+  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes = [] ,callback) {
     let patchOps = [
       {
         op: 'replace',
@@ -232,7 +232,7 @@ class DeployUtils {
     return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName, restApiId, patchOps, callback);
   };
 
-  configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes, callback) {
+  configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes = [], callback) {
     let patchOps = [
       {
         op: 'replace',
@@ -253,7 +253,7 @@ class DeployUtils {
     return _configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName, restApiId, patchOps, callback);
   };
 
-  configureApiGatewaySettingsForProd(restApiId, whitelistedRoutes, callback) {
+  configureApiGatewaySettingsForProd(restApiId, whitelistedRoutes = [], callback) {
     let patchOps = [
       {
         op: 'replace',
