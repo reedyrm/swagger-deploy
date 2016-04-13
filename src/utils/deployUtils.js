@@ -36,7 +36,7 @@ class DeployUtils {
       constants.env.INTEGRATION.FullName,
       callback);
   }
-  
+
   deployApiGatewayToSandbox(apiGatewayId, callback) {
     this._deployApiGatewayToStage(apiGatewayId,
       constants.env.SANDBOX.ShortName,
@@ -75,7 +75,7 @@ class DeployUtils {
       apigateway.createDeployment(params, function (err, data) {
         if (err) {
           tsm.message({text: `Error: ${err} | Stack Trace: ${err.stack}`, errorDetails: err});
-          //throw error??
+          throw err;
         }
         else {
           tsm.message({text: data});
@@ -210,7 +210,7 @@ class DeployUtils {
       }
     });
   };
-  
+
   configureApiGatewaySettings(stageName, restApiId, whitelistedPatchOps, blacklistedPatchOps, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for [stageName: ${stageName}]. [ApiGatewayId: ${restApiId}]`);
@@ -223,13 +223,13 @@ class DeployUtils {
       };
 
       let patches = [];
-      
+
       tsm.progressMessage(`White listed patch updates: ${JSON.stringify(whitelistedPatchOps)}`);
       tsm.progressMessage(`Black listed patch updates: ${JSON.stringify(blacklistedPatchOps)}`);
       patches = patches.concat(whitelistedPatchOps);
-      patches = patches.concat(blacklistedPatchOps);   
+      patches = patches.concat(blacklistedPatchOps);
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
-      
+
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
       let params = {
         restApiId: restApiId,
@@ -250,7 +250,7 @@ class DeployUtils {
       });
     }).asCallback(callback);
   };
-  
+
   createBasePathMapping(stageName, domainName, apiGatewayId, apiBasePath, callback) {
     tsm.progressStart(`Creating BasePath Mapping for 'int' Stage. [DomainName: ${domainName}] [ApiGatewayId: ${apiGatewayId}]`);
     let apiGatewayParams = {
@@ -620,7 +620,7 @@ class DeployUtils {
         throw err;
       });
   }
-  
+
   /**
    *
    * @param parameters
