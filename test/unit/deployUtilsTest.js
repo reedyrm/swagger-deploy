@@ -76,6 +76,24 @@ describe('When accessing deployUtils class', function() {
     expect(DeployUtils.lookupApiGatewayByName).to.be.a('function');
   });
 
+  it('should have a function for configureApiGatewaySettingsForInt', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForInt).to.be.a('function');
+  });
+
+  it('should have a function for configureApiGatewaySettingsForSandbox', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForSandbox).to.be.a('function');
+  });
+
+  it('should have a function for configureApiGatewaySettingsForProd', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForProd).to.be.a('function');
+  });
+
   it('should have a function for createStageVariable', () => {
     let DeployUtils = new module.deployUtilsClass({});
 

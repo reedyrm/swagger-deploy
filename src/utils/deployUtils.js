@@ -229,7 +229,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
+    return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, patchOps, callback);
   };
 
   configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes = [], callback) {
@@ -275,6 +275,7 @@ class DeployUtils {
   };
 
   _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
+    console.log('starting _configureApiGatewaySettingsForEnv');
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for Stage. [Stage: ${stageName}] [ApiGatewayId: ${restApiId}]`);
 
