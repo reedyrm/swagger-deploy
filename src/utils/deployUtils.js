@@ -211,7 +211,104 @@ class DeployUtils {
     });
   };
 
-  configureApiGatewaySettings(stageName, restApiId, whitelistedPatchOps, blacklistedPatchOps, callback) {
+  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes ,callback) {
+    let patchOps = [
+      {
+        op: 'replace',
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
+        value: 'false'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
+
+    return _configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName, restApiId, patchOps, callback);
+  };
+
+  configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes, callback) {
+    let patchOps = [
+      {
+        op: 'replace',
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
+        value: 'false'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
+
+    return _configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName, restApiId, patchOps, callback);
+  };
+
+  configureApiGatewaySettingsForProd(restApiId, whitelistedRoutes, callback) {
+    let patchOps = [
+      {
+        op: 'replace',
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
+        value: 'true'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
+
+    return _configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName, restApiId, patchOps, callback);
+  };
+
+  _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
+    return new Promise((resolve, reject) => {
+      tsm.progressStart(`Configuring Api Gateway Settings for Stage. [Stage: ${stageName}] [ApiGatewayId: ${restApiId}]`);
+
+      let apiGatewayParams = {
+        apiVersion: '2015-07-09',
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
+        sslEnabled: true,
+        region: this._region
+      };
+
+      let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let params = {
+        restApiId: restApiId,
+        stageName: stageName,
+        patchOperations: patchOps
+      };
+
+      apiGateway.updateStage(params, function (err, data) {
+        if (err) {
+          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
+          tsm.message({text: errorMessage});
+          reject({message: errorMessage});
+        } else {
+          tsm.message({text: `${JSON.stringify(data)}`});
+          tsm.progressFinish(`Configuring Api Gateway Settings for Stage. [Stage: ${stageName}] [ApiGatewayId: ${restApiId}]`);
+          resolve();
+        }
+      });
+    }).asCallback(callback);
+  }
+
+
+  configureApiGatewaySettings(stageName, restApiId, patchOps, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for [stageName: ${stageName}]. [ApiGatewayId: ${restApiId}]`);
       let apiGatewayParams = {
@@ -222,12 +319,10 @@ class DeployUtils {
         region: this._region
       };
 
-      let patches = [];
+      let patches = patchOps;
 
-      tsm.progressMessage(`White listed patch updates: ${JSON.stringify(whitelistedPatchOps)}`);
-      tsm.progressMessage(`Black listed patch updates: ${JSON.stringify(blacklistedPatchOps)}`);
-      patches = patches.concat(whitelistedPatchOps);
-      patches = patches.concat(blacklistedPatchOps);
+      tsm.progressMessage(`Patch updates: ${JSON.stringify(patchOps)}`);
+      patches = patches.concat(patchOps);
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
 
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
