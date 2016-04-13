@@ -27,7 +27,7 @@
     "node-uuid": "^1.4.7",
     "teamcity-service-messages": "^0.1.6"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-core": "^6.3.17",
