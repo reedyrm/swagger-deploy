@@ -295,7 +295,7 @@ class DeployUtils {
 
       apiGateway.updateStage(params, function (err, data) {
         if (err) {
-          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
+          let errorMessage = `Error: ${JSON.stringify(err)} | Stack Trace: ${err.stack}`;
           tsm.message({text: errorMessage});
           reject({message: errorMessage});
         } else {
