@@ -53,43 +53,46 @@ class DeployUtils {
 
   _deployApiGatewayToStage(apiGatewayId, stageName, stageFullName, callback) {
     tsm.progressStart(`Deploying to '${stageFullName}' Environment`);
-    try {
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
+    Promise.delay(20000).then(function() {
+      try {
+        let apiGatewayParams = {
+          apiVersion: '2015-07-09',
+          accessKeyId: this._accessKey,
+          secretAccessKey: this._secretKey,
+          sslEnabled: true,
+          region: this._region
+        };
 
-      let params = {
-        restApiId: apiGatewayId, /* required */
-        stageName: stageName, /* required */
-        cacheClusterEnabled: false,
-        description: `${stageFullName} - ${moment.utc().format()}`,
-        stageDescription: `${stageFullName} - ${moment.utc().format()}`
-      };
+        let params = {
+          restApiId: apiGatewayId, /* required */
+          stageName: stageName, /* required */
+          cacheClusterEnabled: false,
+          description: `${stageFullName} - ${moment.utc().format()}`,
+          stageDescription: `${stageFullName} - ${moment.utc().format()}`
+        };
 
-      let apigateway = new AWS.APIGateway(apiGatewayParams);
+        let apigateway = new AWS.APIGateway(apiGatewayParams);
 
-      apigateway.createDeployment(params, function (err, data) {
-        if (err) {
-          tsm.message({text: `Error: ${err} | Stack Trace: ${err.stack}`, errorDetails: err});
-          throw err;
-        }
-        else {
-          tsm.message({text: data});
-          //introducing a 5 second delay to allow Api Gateway deploy to go live
-          setTimeout(function () {
-            tsm.progressFinish(`Deploying to '${stageFullName}' Environment`);
-            callback();
-          }, 5000);
-        }
-      });
-    }
-    catch (err) {
-      tsm.message(`DeployApiGatewayToStage Error: ${err}`);
-    }
+
+        apigateway.createDeployment(params, function (err, data) {
+          if (err) {
+            tsm.message({text: `Error: ${err} | Stack Trace: ${err.stack}`, errorDetails: err});
+            throw err;
+          }
+          else {
+            tsm.message({text: data});
+            //introducing a 5 second delay to allow Api Gateway deploy to go live
+            setTimeout(function () {
+              tsm.progressFinish(`Deploying to '${stageFullName}' Environment`);
+              callback();
+            }, 5000);
+          }
+        });
+      }
+      catch (err) {
+        tsm.message(`DeployApiGatewayToStage Error: ${err}`);
+      }
+    });
   };
 
   lookupApiGatewayByName(apiGatewayName, callback) {
