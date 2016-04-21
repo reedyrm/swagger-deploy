@@ -81,11 +81,11 @@ class SwaggerImporter {
    */
   overwriteCurrentSwagger(accessKeyId, secretAccessKey, restApiId, date, swaggerJson=null, sessionToken=null) {
     if (util.isNullOrUndefined(accessKeyId)) {
-      throw Promise.reject(new Error("accessKeyId is undefined or null"));
+      return Promise.reject(new Error("accessKeyId is undefined or null"));
     }
 
     if (util.isNullOrUndefined(secretAccessKey)) {
-      throw Promise.reject(new Error("secretAccessKey is undefined or null"));
+      return Promise.reject(new Error("secretAccessKey is undefined or null"));
     }
 
     if (util.isNullOrUndefined(restApiId) || restApiId === "") {

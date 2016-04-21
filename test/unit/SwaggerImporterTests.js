@@ -388,7 +388,7 @@ describe("Swagger Importer unit tests", () => {
 
           result.then(() => {
             throw shouldFailTestException;
-            done();
+
           }).catch((error) => {
             expect(error.message).to.equal("restApiId is null, undefined, or empty");
             done();

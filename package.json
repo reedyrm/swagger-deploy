@@ -24,6 +24,7 @@
     "mocha-teamcity-reporter": "^1.0.0",
     "moment": "^2.11.2",
     "node-uuid": "^1.4.7",
+    "request-promise": "^3.0.0",
     "teamcity-service-messages": "^0.1.6"
   },
   "version": "1.1.0",
