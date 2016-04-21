@@ -6,7 +6,7 @@ module.exports = (function(){
       INTEGRATION: {
         FullName: "Integration",
         ShortName: "int",
-        Host: "dev.api.material.com"
+        Host: "int.api.material.com"
       },
       SANDBOX: {
         FullName: "Sandbox",
