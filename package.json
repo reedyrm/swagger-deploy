@@ -15,8 +15,12 @@
   "bugs": "http://therearenobugs.com",
   "contributors": [],
   "dependencies": {
+    "aws-apigateway-importer": "^0.8.0",
     "aws-sdk": "^2.2.36",
+    "aws-sigv4": "^1.4.3",
+    "awssign": "0.0.6",
     "bluebird": "^3.3.1",
+    "dateformat": "^1.0.12",
     "gulp": "^3.9.1",
     "gulp-spawn-mocha": "^2.2.2",
     "gulp-util": "^3.0.7",
@@ -25,6 +29,8 @@
     "mocha-teamcity-reporter": "^1.0.0",
     "moment": "^2.11.2",
     "node-uuid": "^1.4.7",
+    "pbkdf2": "^3.0.4",
+    "request-promise": "^2.0.1",
     "teamcity-service-messages": "^0.1.6"
   },
   "version": "0.2.12",

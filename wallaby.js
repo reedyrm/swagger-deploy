@@ -2,7 +2,7 @@ var babel = require('babel-core');
 
 module.exports = function(wallaby){
   return {
-    files: ["src/**/*.js","build/**/*.js", "*.js"],
+    files: ["src/**/*.js","build/**/*.js", "*.js", "test/**/*.json"],
     tests: ["test/**/*.js"],
     env: {type: "node"},
     testFramework: "mocha",

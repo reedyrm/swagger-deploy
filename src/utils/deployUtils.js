@@ -10,6 +10,7 @@ let gulpUtil = require('gulp-util');
 let path = require('path');
 let mocha = require("gulp-spawn-mocha");
 let CloudFrontService = require('./cloudfrontService.js');
+let SwaggerImporter = require('./SwaggerImporter.js');
 let lib_directory = '../../lib';
 let uuid = require('node-uuid');
 let fs = require('fs');
@@ -20,7 +21,6 @@ class DeployUtils {
   constructor(options) {
     let opts = options || {};
 
-
     this._accessKey = opts.accessKey || '';
     this._secretKey = opts.secretKey || '';
     this._region = opts.region || '';
@@ -28,6 +28,7 @@ class DeployUtils {
         accessKey: this._accessKey,
         secretKey: this._secretKey
       });
+    this._swaggerImporter = opts.swaggerImporter || new SwaggerImporter(this._region);
   }
 
   deployApiGatewayToInt(apiGatewayId, callback) {
@@ -252,7 +253,6 @@ class DeployUtils {
     }).asCallback(callback);
   };
 
-
   configureApiGatewaySettingsForInt(restApiId, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
@@ -299,7 +299,7 @@ class DeployUtils {
       });
     }).asCallback(callback);
   };
-  
+
   configureApiGatewaySettingsForInt2(restApiId, blacklistedPaths, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
@@ -330,9 +330,9 @@ class DeployUtils {
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
       tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
-      patches = blackListed.concat(patches);      
+      patches = blackListed.concat(patches);
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
-      
+
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
       let params = {
         restApiId: restApiId,
@@ -385,7 +385,7 @@ class DeployUtils {
       tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
       let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
       tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
-      patches = blackListed.concat(patches);      
+      patches = blackListed.concat(patches);
       tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
 
@@ -803,6 +803,16 @@ class DeployUtils {
     }
   }
 
+  /**
+   *
+   * @param {string} apiGatewayId
+   * @param {object} swaggerEntity
+   * @return {Promise} it's the response data promise from a request-promise
+   * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
+   */
+  overwriteSwagger(apiGatewayId, swaggerEntity){
+     return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity);
+  };
 }
 
 function isWindows() {

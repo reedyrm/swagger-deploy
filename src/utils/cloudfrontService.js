@@ -1,3 +1,5 @@
+"use strict";
+
 let AWS = require('aws-sdk'),
     __ = require('lodash'),
     uuid = require('node-uuid'),
@@ -19,7 +21,7 @@ class CloudFrontService {
   }
 
   getDistributionByCName(cname, callback) {
-    console.log('Executing getDistributionByCName.')
+    console.log('Executing getDistributionByCName.');
     let params = {};
 
     let findDistribution = (data) => {
@@ -39,7 +41,7 @@ class CloudFrontService {
             if (err) reject(err, null);
             else {
               data.DistributionConfig.Id = distribution.Id;
-              data.DistributionConfig.ETag = data.ETag
+              data.DistributionConfig.ETag = data.ETag;
               resolve(data.DistributionConfig);
             }
           })

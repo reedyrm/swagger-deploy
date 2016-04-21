@@ -1,16 +1,17 @@
 "use strict";
 let chai = require('chai'),
-    Promise = require('bluebird'),
-    expect = chai.expect,
-    sinon = require('sinon'),
-    chaiAsPromised = require('chai-as-promised'),
-    CloudFrontService = require('../../src/utils/cloudfrontService.js'),
-    sinonAsPromised = require('sinon-as-promised'),
-    module = require('../../src/index.js');
+  Promise = require('bluebird'),
+  expect = chai.expect,
+  sinon = require('sinon'),
+  chaiAsPromised = require('chai-as-promised'),
+  uuid = require("node-uuid"),
+  CloudFrontService = require('../../src/utils/cloudfrontService.js'),
+  sinonAsPromised = require('sinon-as-promised'),
+  module = require('../../src/index.js');
 
 chai.use(chaiAsPromised);
 
-describe('When accessing deployUtils class', function() {
+describe('When accessing deployUtils class', function () {
   let sandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
@@ -26,7 +27,7 @@ describe('When accessing deployUtils class', function() {
   });
 
   it('should set accessKey to value passed in', () => {
-    let params = { accessKey: 'ABCD'};
+    let params = {accessKey: 'ABCD'};
     let DeployUtils = new module.deployUtilsClass(params);
 
     expect(DeployUtils._accessKey).to.be.equal(params.accessKey);
@@ -39,7 +40,7 @@ describe('When accessing deployUtils class', function() {
   });
 
   it('should set secretKey to value passed in', () => {
-    let params = { secretKey: '12345'};
+    let params = {secretKey: '12345'};
     let DeployUtils = new module.deployUtilsClass(params);
 
     expect(DeployUtils._secretKey).to.be.equal(params.secretKey);
@@ -52,7 +53,7 @@ describe('When accessing deployUtils class', function() {
   });
 
   it('should set region to value passed in', () => {
-    let params = { region: 'us-east-1'};
+    let params = {region: 'us-east-1'};
     let DeployUtils = new module.deployUtilsClass(params);
 
     expect(DeployUtils._region).to.be.equal(params.region);
@@ -455,4 +456,55 @@ describe('When accessing deployUtils class', function() {
     });
   });
 
+  describe("should overwrite swagger", () => {
+    it("should overwrite swagger", (done) => {
+      this.timeout(3000);
+
+      var deployUtilOptions = {
+        region: uuid(),
+        accessKey: uuid(),
+        secretKey: uuid()
+      };
+
+      var swaggerImporterClass = new module.swaggerImporterClass(deployUtilOptions.region);
+      let overwriteCurrentSwaggerStub = sinon.stub(swaggerImporterClass, "overwriteCurrentSwagger", () => {
+        return Promise.resolve("Test");
+      });
+
+      deployUtilOptions["swaggerImporter"] = swaggerImporterClass;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+
+      var apiId = uuid();
+
+      deployUtils.overwriteSwagger(apiId, deployUtilOptions).then((data) => {
+        console.log(data);
+
+        console.log(overwriteCurrentSwaggerStub.args);
+
+        var stubArguments = overwriteCurrentSwaggerStub.args[0];
+
+        console.log(stubArguments[0]);
+        expect(stubArguments[0]).to.be.equal(deployUtilOptions.accessKey);
+
+        console.log(stubArguments[1]);
+        expect(stubArguments[1]).to.be.equal(deployUtilOptions.secretKey);
+
+        console.log(stubArguments[2]);
+        expect(stubArguments[2]).to.be.equal(apiId);
+
+        console.log(stubArguments[3]);
+        expect(stubArguments[3]).to.be.an.instanceof(Date);
+
+        console.log(stubArguments[4]);
+        expect(stubArguments[4]).to.be.equal(deployUtilOptions);
+
+        done();
+      }).catch((error)=> {
+        console.error(error);
+        expect(error).to.be.null;
+        done();
+      });
+    });
+  });
 });
