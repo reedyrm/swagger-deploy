@@ -77,6 +77,24 @@ describe('When accessing deployUtils class', function () {
     expect(DeployUtils.lookupApiGatewayByName).to.be.a('function');
   });
 
+  it('should have a function for configureApiGatewaySettingsForInt', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForInt).to.be.a('function');
+  });
+
+  it('should have a function for configureApiGatewaySettingsForSandbox', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForSandbox).to.be.a('function');
+  });
+
+  it('should have a function for configureApiGatewaySettingsForProd', () => {
+    let DeployUtils = new module.deployUtilsClass({});
+
+    expect(DeployUtils.configureApiGatewaySettingsForProd).to.be.a('function');
+  });
+
   it('should have a function for createStageVariable', () => {
     let DeployUtils = new module.deployUtilsClass({});
 
@@ -87,18 +105,6 @@ describe('When accessing deployUtils class', function () {
     let DeployUtils = new module.deployUtilsClass({});
 
     expect(DeployUtils.findApiBasePathMapping).to.be.a('function');
-  });
-
-  it('should have a function for configureApiGatewaySettingsForProd', () => {
-    let DeployUtils = new module.deployUtilsClass({});
-
-    expect(DeployUtils.configureApiGatewaySettingsForProd).to.be.a('function');
-  });
-
-  it('should have a function for configureApiGatewaySettingsForInt', () => {
-    let DeployUtils = new module.deployUtilsClass({});
-
-    expect(DeployUtils.configureApiGatewaySettingsForInt).to.be.a('function');
   });
 
   it('should have a function for createBasePathMapping', () => {
@@ -197,7 +203,7 @@ describe('When accessing deployUtils class', function () {
 
       //Assert
       return resultPromise.then(() => {
-        expect(stub.args[0][0]).to.be.equal('dev.api.material.com');
+        expect(stub.args[0][0]).to.be.equal('int.api.material.com');
       });
     });
 

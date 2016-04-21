@@ -21,6 +21,7 @@ class DeployUtils {
   constructor(options) {
     let opts = options || {};
 
+
     this._accessKey = opts.accessKey || '';
     this._secretKey = opts.secretKey || '';
     this._region = opts.region || '';
@@ -38,6 +39,13 @@ class DeployUtils {
       callback);
   }
 
+  deployApiGatewayToSandbox(apiGatewayId, callback) {
+    this._deployApiGatewayToStage(apiGatewayId,
+      constants.env.SANDBOX.ShortName,
+      constants.env.SANDBOX.FullName,
+      callback);
+  }
+
   deployApiGatewayToProd(apiGatewayId, callback) {
     this._deployApiGatewayToStage(apiGatewayId,
       constants.env.PRODUCTION.ShortName,
@@ -47,43 +55,46 @@ class DeployUtils {
 
   _deployApiGatewayToStage(apiGatewayId, stageName, stageFullName, callback) {
     tsm.progressStart(`Deploying to '${stageFullName}' Environment`);
-    try {
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
+    Promise.delay(20000).then(function() {
+      try {
+        let apiGatewayParams = {
+          apiVersion: '2015-07-09',
+          accessKeyId: this._accessKey,
+          secretAccessKey: this._secretKey,
+          sslEnabled: true,
+          region: this._region
+        };
 
-      let params = {
-        restApiId: apiGatewayId, /* required */
-        stageName: stageName, /* required */
-        cacheClusterEnabled: false,
-        description: `${stageFullName} - ${moment.utc().format()}`,
-        stageDescription: `${stageFullName} - ${moment.utc().format()}`
-      };
+        let params = {
+          restApiId: apiGatewayId, /* required */
+          stageName: stageName, /* required */
+          cacheClusterEnabled: false,
+          description: `${stageFullName} - ${moment.utc().format()}`,
+          stageDescription: `${stageFullName} - ${moment.utc().format()}`
+        };
 
-      let apigateway = new AWS.APIGateway(apiGatewayParams);
+        let apigateway = new AWS.APIGateway(apiGatewayParams);
 
-      apigateway.createDeployment(params, function (err, data) {
-        if (err) {
-          tsm.message({text: `Error: ${err} | Stack Trace: ${err.stack}`, errorDetails: err});
-          //throw error??
-        }
-        else {
-          tsm.message({text: data});
-          //introducing a 5 second delay to allow Api Gateway deploy to go live
-          setTimeout(function () {
-            tsm.progressFinish(`Deploying to '${stageFullName}' Environment`);
-            callback();
-          }, 5000);
-        }
-      });
-    }
-    catch (err) {
-      tsm.message(`DeployApiGatewayToStage Error: ${err}`);
-    }
+
+        apigateway.createDeployment(params, function (err, data) {
+          if (err) {
+            tsm.message({text: `Error: ${err} | Stack Trace: ${err.stack}`, errorDetails: err});
+            throw err;
+          }
+          else {
+            tsm.message({text: data});
+            //introducing a 5 second delay to allow Api Gateway deploy to go live
+            setTimeout(function () {
+              tsm.progressFinish(`Deploying to '${stageFullName}' Environment`);
+              callback();
+            }, 5000);
+          }
+        });
+      }
+      catch (err) {
+        tsm.message(`DeployApiGatewayToStage Error: ${err}`);
+      }
+    });
   };
 
   lookupApiGatewayByName(apiGatewayName, callback) {
@@ -205,223 +216,139 @@ class DeployUtils {
     });
   };
 
-  configureApiGatewaySettingsForProd(restApiId, callback) {
-    return new Promise((resolve, reject) => {
-      tsm.progressStart(`Configuring Api Gateway Settings for Prod Stage. [ApiGatewayId: ${restApiId}]`);
-
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
-
-      let apiGateway = new AWS.APIGateway(apiGatewayParams);
-      let params = {
-        restApiId: restApiId,
-        stageName: constants.env.PRODUCTION.ShortName,
-        patchOperations: [
-          {
-            op: 'replace',
-            path: '/*/*/logging/loglevel',
-            value: 'INFO'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/metrics/enabled',
-            value: 'true'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/logging/dataTrace',
-            value: 'false'
-          }]
-      };
-
-      apiGateway.updateStage(params, function (err, data) {
-        if (err) {
-          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
-          tsm.message({text: errorMessage});
-          reject({message: errorMessage});
-        } else {
-          tsm.message({text: `${JSON.stringify(data)}`});
-          tsm.progressFinish(`Configuring Api Gateway Settings for Prod Stage. [ApiGatewayId: ${restApiId}]`);
-          resolve();
-        }
-      });
-    }).asCallback(callback);
-  };
-
-  configureApiGatewaySettingsForInt(restApiId, callback) {
-    return new Promise((resolve, reject) => {
-      tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
-
-      let apiGateway = new AWS.APIGateway(apiGatewayParams);
-      let params = {
-        restApiId: restApiId,
-        stageName: constants.env.INTEGRATION.ShortName,
-        patchOperations: [
-          {
-            op: 'replace',
-            path: '/*/*/logging/loglevel',
-            value: 'INFO'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/metrics/enabled',
-            value: 'false'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/logging/dataTrace',
-            value: 'false'
-          }]
-      };
-
-      apiGateway.updateStage(params, function (err, data) {
-        if (err) {
-          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
-          tsm.message({text: errorMessage});
-          reject({message: errorMessage});
-        } else {
-          tsm.message({text: `${JSON.stringify(data)}`});
-          tsm.progressFinish(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
-          resolve();
-        }
-      });
-    }).asCallback(callback);
-  };
-
-  configureApiGatewaySettingsForInt2(restApiId, blacklistedPaths, callback) {
-    return new Promise((resolve, reject) => {
-      tsm.progressStart(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
-
-      let patches = [
-          {
-            op: 'replace',
-            path: '/*/*/logging/loglevel',
-            value: 'INFO'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/metrics/enabled',
-            value: 'false'
-          },
-          {
-            op: 'replace',
-            path: '/*/*/logging/dataTrace',
-            value: 'true'
-          }];
-      tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
-      let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
-      tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
-      patches = blackListed.concat(patches);
-      tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
-
-      let apiGateway = new AWS.APIGateway(apiGatewayParams);
-      let params = {
-        restApiId: restApiId,
-        stageName: constants.env.INTEGRATION.ShortName,
-        patchOperations: patches
-      };
-      tsm.progressMessage(`updateStage params: ${JSON.stringify(params)}`);
-      apiGateway.updateStage(params, function (err, data) {
-        if (err) {
-          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
-          tsm.message({text: errorMessage});
-          reject({message: errorMessage});
-        } else {
-          tsm.message({text: `${JSON.stringify(data)}`});
-          tsm.progressFinish(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
-          resolve();
-        }
-      });
-    }).asCallback(callback);
-  };
-
-  configureApiGatewaySettingsForProd2(restApiId, blacklistedPaths, callback) {
-    return new Promise((resolve, reject) => {
-      tsm.progressStart(`Configuring Api Gateway Settings for Prod Stage. [ApiGatewayId: ${restApiId}]`);
-      let apiGatewayParams = {
-        apiVersion: '2015-07-09',
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        sslEnabled: true,
-        region: this._region
-      };
-
-      let patches = [
-        {
-          op: 'replace',
-          path: '/*/*/logging/loglevel',
-          value: 'INFO'
-        },
-        {
-          op: 'replace',
-          path: '/*/*/metrics/enabled',
-          value: 'true'
-        },
-        {
-          op: 'replace',
-          path: '/*/*/logging/dataTrace',
-          value: 'true'
-        }];
-
-      tsm.progressMessage(`patch updates before concat: ${JSON.stringify(patches)}`);
-      let blackListed = this._buildBlacklistedPathsJSON(blacklistedPaths);
-      tsm.progressMessage(`black listed patch updates: ${JSON.stringify(blackListed)}`);
-      patches = blackListed.concat(patches);
-      tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
-      let apiGateway = new AWS.APIGateway(apiGatewayParams);
-
-      let params = {
-        restApiId: restApiId,
-        stageName: constants.env.PRODUCTION.ShortName,
-        patchOperations: patches
-      };
-      tsm.progressMessage(`updateStage params: ${JSON.stringify(params)}`);
-      apiGateway.updateStage(params, function (err, data) {
-        if (err) {
-          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
-          tsm.message({text: errorMessage});
-          reject({message: errorMessage});
-        } else {
-          tsm.message({text: `${JSON.stringify(data)}`});
-          tsm.progressFinish(`Configuring Api Gateway Settings for Prod Stage. [ApiGatewayId: ${restApiId}]`);
-          resolve();
-        }
-      });
-    }).asCallback(callback);
-  };
-
-  _buildBlacklistedPathsJSON(blacklistedPaths) {
-
-    let jsonArr = [];
-
-    for (let i = 0; i < blacklistedPaths.length; i++) {
-      jsonArr.push({
+  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes = [] ,callback) {
+    let patchOps = [
+      {
         op: 'replace',
-        path: blacklistedPaths[i],
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
         value: 'false'
-      });
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
 
-      return jsonArr;
-    }
+    return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, patchOps, callback);
+  };
+
+  configureApiGatewaySettingsForSandbox(restApiId, whitelistedRoutes = [], callback) {
+    let patchOps = [
+      {
+        op: 'replace',
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
+        value: 'false'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
+
+    return this._configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
+  };
+
+  configureApiGatewaySettingsForProd(restApiId, whitelistedRoutes = [], callback) {
+    let patchOps = [
+      {
+        op: 'replace',
+        path: '/*/*/logging/loglevel',
+        value: 'INFO'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/metrics/enabled',
+        value: 'true'
+      },
+      {
+        op: 'replace',
+        path: '/*/*/logging/dataTrace',
+        value: 'false'
+      }];
+
+    return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
+  };
+
+  _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
+    return new Promise((resolve, reject) => {
+      tsm.progressStart(`Configuring Api Gateway Settings for Stage. [Stage: ${stageName}] [ApiGatewayId: ${restApiId}]`);
+
+      let apiGatewayParams = {
+        apiVersion: '2015-07-09',
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
+        sslEnabled: true,
+        region: this._region
+      };
+
+      let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let params = {
+        restApiId: restApiId,
+        stageName: stageName,
+        patchOperations: patchOps
+      };
+
+      apiGateway.updateStage(params, function (err, data) {
+        if (err) {
+          let errorMessage = `Error: ${JSON.stringify(err)} | Stack Trace: ${err.stack}`;
+          tsm.message({text: errorMessage});
+          reject({message: errorMessage});
+        } else {
+          tsm.message({text: `${JSON.stringify(data)}`});
+          tsm.progressFinish(`Configuring Api Gateway Settings for Stage. [Stage: ${stageName}] [ApiGatewayId: ${restApiId}]`);
+          resolve();
+        }
+      });
+    }).asCallback(callback);
+  }
+
+
+  configureApiGatewaySettings(stageName, restApiId, patchOps, callback) {
+    return new Promise((resolve, reject) => {
+      tsm.progressStart(`Configuring Api Gateway Settings for [stageName: ${stageName}]. [ApiGatewayId: ${restApiId}]`);
+      let apiGatewayParams = {
+        apiVersion: '2015-07-09',
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
+        sslEnabled: true,
+        region: this._region
+      };
+
+      let patches = patchOps;
+
+      tsm.progressMessage(`Patch updates: ${JSON.stringify(patchOps)}`);
+      patches = patches.concat(patchOps);
+      tsm.progressMessage(`patch updates after concat: ${JSON.stringify(patches)}`);
+
+      let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let params = {
+        restApiId: restApiId,
+        stageName: stageName,
+        patchOperations: patches
+      };
+      tsm.progressMessage(`updateStage params: ${JSON.stringify(params)}`);
+      apiGateway.updateStage(params, function (err, data) {
+        if (err) {
+          let errorMessage = `Error: ${err} | Stack Trace: ${err.stack}`;
+          tsm.message({text: errorMessage});
+          reject({message: errorMessage});
+        } else {
+          tsm.message({text: `${JSON.stringify(data)}`});
+          tsm.progressFinish(`Configuring Api Gateway Settings for Int Stage. [ApiGatewayId: ${restApiId}]`);
+          resolve();
+        }
+      });
+    }).asCallback(callback);
   };
 
   createBasePathMapping(stageName, domainName, apiGatewayId, apiBasePath, callback) {
@@ -677,6 +604,123 @@ class DeployUtils {
       });
   }
 
+
+  /**
+   *
+   * @param parameters
+   * @param parameters.apiGatewayId
+   * @param parameters.originName Name of the CloudFront Origin
+   * @param parameters.cname CNAME of the cloudfront distribution
+   * @param parameters.gatewayPathRegex
+   * @returns {Promise.<T>}
+   */
+  connectGatewayToCloudFrontForSandStage(parameters) {
+    let params = parameters || {};
+
+    let cname = params.cname || constants.env.SANDBOX.Host;
+    let originId = params.originName || uuid.v4().replace(/-/g, '');
+    let apiGatewayDomainName = `${params.apiGatewayId}.execute-api.us-east-1.amazonaws.com`;
+    let apiGatewayPath = '/sand';
+
+    let originDefintion = {
+      DomainName: apiGatewayDomainName, /* required */
+      OriginPath: apiGatewayPath,
+      Id: originId, /* required */
+      CustomHeaders: {
+        Quantity: 0,
+        Items: []
+      },
+      CustomOriginConfig: {
+        HTTPPort: 80, /* required */
+        HTTPSPort: 443, /* required */
+        OriginProtocolPolicy: 'https-only', /* required */
+        OriginSslProtocols: {
+          Items: [/* required */
+            'TLSv1',
+            'TLSv1.1',
+            'TLSv1.2'
+          ],
+          Quantity: 3 /* required */
+        }
+      }
+    };
+
+    let cacheBehaviorDefintion = {
+      ForwardedValues: {
+        /* required */
+        Cookies: {
+          /* required */
+          Forward: 'none', /* required */
+          WhitelistedNames: {
+            Quantity: 0, /* required */
+            Items: []
+          }
+        },
+        QueryString: true, /* required */
+        Headers: {
+          Quantity: 4, /* required */
+          Items: [
+            'x-vol-tenant',
+            'x-vol-test',
+            'accept',
+            'authorization'
+          ]
+        }
+      },
+      MinTTL: 0, /* required */
+      PathPattern: params.gatewayPathRegex, /* required */
+      TargetOriginId: originId, /* required */
+      TrustedSigners: {
+        /* required */
+        Enabled: false, /* required */
+        Quantity: 0, /* required */
+        Items: []
+      },
+      ViewerProtocolPolicy: 'redirect-to-https', /* required */
+      AllowedMethods: {
+        Items: [/* required */
+          'GET',
+          'HEAD',
+          'POST',
+          'PUT',
+          'PATCH',
+          'OPTIONS',
+          'DELETE'
+        ],
+        Quantity: 7, /* required */
+        CachedMethods: {
+          Items: [/* required */
+            'GET',
+            'HEAD',
+            'OPTIONS'
+          ],
+          Quantity: 3 /* required */
+        }
+      },
+      Compress: true,
+      DefaultTTL: 0,
+      MaxTTL: 0,
+      SmoothStreaming: false
+    };
+
+    console.log(`Retrieving CloudFront Distribution [CNAME: ${cname}]`);
+
+    return this._cloudFrontService.getDistributionByCName(cname).then((distribution) => {
+        if (__.isEmpty(distribution)) {
+          throw new Error("Distribution not found!");
+        }
+
+        this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
+          if (err) console.log(err);
+          else console.log(data);
+        });
+      })
+      .catch(err => {
+        console.log(err);
+        throw err;
+      });
+  }
+
   /**
    *
    * @param parameters
@@ -811,7 +855,7 @@ class DeployUtils {
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
   overwriteSwagger(apiGatewayId, swaggerEntity){
-     return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity);
+    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity);
   };
 }
 
