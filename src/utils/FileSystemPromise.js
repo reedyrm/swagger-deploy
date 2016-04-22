@@ -34,10 +34,11 @@ class FileSystemPromise {
   /**
    * gets data from file and serializes it as an Object
    * @param {string} filePathAndName
-   * @return {Promise}
+   * @param {boolean} [serializeToJson=true]
+   * @return {Promise<object>|Promise<string>}
    * @throws {Error} with filePathAndName is null, undefined or empty string
    */
-  get(filePathAndName) {
+  get(filePathAndName, serializeToJson=true) {
     var entityData = {};
     if (filePathAndName === undefined || filePathAndName === null || filePathAndName == '') {
       throw new Error("filePathAndName cannot be undefined, null, or empty.");
@@ -47,16 +48,15 @@ class FileSystemPromise {
       if (!exists) {
         return Promise.resolve(null);
       }
-      else {
-        //promisifyAll creates a readFileAsync method, which is created by bluebird
-        return fs.readFileAsync(filePathAndName, this.encodingType).then((data) => {
-          return Promise.resolve(JSON.parse(data));
-        }).catch((error) => {
-          console.error(error);
-          //returns new collection item
-          return Promise.resolve(entityData);
-        });
-      }
+
+      //promisifyAll creates a readFileAsync method, which is created by bluebird
+      return fs.readFileAsync(filePathAndName, this.encodingType).then((data) => {
+        return Promise.resolve(serializeToJson ? JSON.parse(data) : data);
+      }).catch((error) => {
+        console.error(error);
+        //returns new collection item
+        return Promise.resolve(entityData);
+      });
     });
   }
 

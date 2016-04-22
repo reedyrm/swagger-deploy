@@ -118,138 +118,202 @@ describe("FileSystemPromise unit tests", function () {
         });
       });
 
-      describe("and file exits", () => {
-        it("it should get file", (done) => {
-          var filePathAndName = `./../${uuid()}.json`;
-          var test = new FileSystem();
+      describe("and file exits with serializing to object true", function () {
+        let filePathAndName = null;
+        let t = null;
 
-          var t = {};
+        beforeEach((done) => {
+          filePathAndName = `./../${uuid()}.json`;
+
+          t = {};
           t.name = uuid();
           t.id = uuid();
-          t.uri = "http://blah/" + test.id;
+          t.uri = "http://blah/" + t.id;
 
           var data2 = JSON.stringify(t);
 
           // saving file for test
           fs.writeFile(filePathAndName, data2, "utf8", (err, data) => {
+            if (err) {
+              console.error(err);
+            }
 
-            // act: get the created folder
-            test.get(filePathAndName).then((data) => {
-              expect(data.id).to.equal(t.id);
-              expect(data.name).to.equal(t.name);
-
-              //console.log(t);
-              //console.log(data);
-
-              done();
-            }).catch((error) => {
-              expect(error).to.be.null;
-              done();
-            });
+            done();
           });
         });
 
-      })
-    })
-  });
+        afterEach((done) => {
+          t = null;
+          fs.unlink(filePathAndName, (err, data) => {
 
-  describe("and checking if file exists by supplying a file and its location", () => {
-    describe("and file is undefined", () => {
-      it("it should be false", (done)=> {
-        var test = new FileSystem();
-        test.fileSystemObjectExists(undefined)
-          .then((doesExist)=> {
-            expect(doesExist).to.equal(false);
+            if (err) {
+              console.error(err);
+            }
+
             done();
-          }).catch((error)=> {
-          expect(error).to.be.null;
-          done();
+          });
         });
-      });
-    });
 
-    describe("and file is null", () => {
-      it("it should be false", (done)=> {
-        var test = new FileSystem();
-        test.fileSystemObjectExists(null)
-          .then((doesExist)=> {
-            expect(doesExist).to.equal(false);
-            done();
-          }).catch((error)=> {
-          expect(error).to.be.null;
-          done();
-        });
-      });
-    });
-
-    describe("and file is empty string", () => {
-      it("it should be false", (done)=> {
-        var test = new FileSystem();
-        test.fileSystemObjectExists("")
-          .then((doesExist)=> {
-            expect(doesExist).to.equal(false);
-            done();
-          }).catch((error)=> {
-          expect(error).to.be.null;
-          done();
-        });
-      });
-    });
-
-    describe("and path with file info is populated", () => {
-      describe("and file does not exist", () => {
-        it("it should return false", (done) => {
+        it("it should get file and serialized to object", (done) => {
           var test = new FileSystem();
-          var filePathAndName = `./fileShouldNotExist${uuid()}.fbo`;
-          //console.log(filePathAndName);
-          test.fileSystemObjectExists(filePathAndName).then((exists) => {
-            expect(exists).to.equal(false);
+
+          // act: get the created folder
+          test.get(filePathAndName).then((data) => {
+            expect(data.id).to.equal(t.id);
+            expect(data.name).to.equal(t.name);
+
+            //console.log(t);
+            //console.log(data);
+
             done();
           }).catch((error) => {
+            expect(error).to.be.null;
+            done();
+          });
+
+        });
+
+        it("it should get file and serialized to string", (done) => {
+          var test = new FileSystem();
+
+          // act: get the created folder
+          test.get(filePathAndName, false).then((data) => {
+            expect(data).to.equal(JSON.stringify(t));
+
+            //console.log(t);
+            //console.log(data);
+
+            done();
+          }).catch((error) => {
+            expect(error).to.be.null;
+            done();
+          });
+
+        });
+      });
+    });
+
+    describe("and checking if file exists by supplying a file and its location", () => {
+      describe("and file is undefined", () => {
+        it("it should be false", (done)=> {
+          var test = new FileSystem();
+          test.fileSystemObjectExists(undefined)
+            .then((doesExist)=> {
+              expect(doesExist).to.equal(false);
+              done();
+            }).catch((error)=> {
             expect(error).to.be.null;
             done();
           });
         });
       });
 
-      describe("and file does exist", () => {
-        it("it should return false", (done) => {
+      describe("and file is null", () => {
+        it("it should be false", (done)=> {
           var test = new FileSystem();
-          var filePathAndName = `./fileDoesExist${uuid()}.ed`;
-
-          test.save(filePathAndName, {data: true}).then(()=> {
-            test.fileSystemObjectExists(filePathAndName).then((exists) => {
-              //console.log(exists);
-              expect(exists).to.equal(true);
+          test.fileSystemObjectExists(null)
+            .then((doesExist)=> {
+              expect(doesExist).to.equal(false);
               done();
+            }).catch((error)=> {
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("and file is empty string", () => {
+        it("it should be false", (done)=> {
+          var test = new FileSystem();
+          test.fileSystemObjectExists("")
+            .then((doesExist)=> {
+              expect(doesExist).to.equal(false);
+              done();
+            }).catch((error)=> {
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("and path with file info is populated", () => {
+        describe("and file does not exist", () => {
+          it("it should return false", (done) => {
+            var test = new FileSystem();
+            var filePathAndName = `./fileShouldNotExist${uuid()}.fbo`;
+            //console.log(filePathAndName);
+            test.fileSystemObjectExists(filePathAndName).then((exists) => {
+              expect(exists).to.equal(false);
+              done();
+            }).catch((error) => {
+              expect(error).to.be.null;
+              done();
+            });
+          });
+        });
+
+        describe("and file does exist", () => {
+          it("it should return false", (done) => {
+            var test = new FileSystem();
+            var filePathAndName = `./fileDoesExist${uuid()}.ed`;
+
+            test.save(filePathAndName, {data: true}).then(()=> {
+              test.fileSystemObjectExists(filePathAndName).then((exists) => {
+                //console.log(exists);
+                expect(exists).to.equal(true);
+                done();
+              }).catch((error) => {
+                //console.error(error);
+                expect(error).to.be.null;
+                done();
+              });
             }).catch((error) => {
               //console.error(error);
               expect(error).to.be.null;
               done();
             });
-          }).catch((error) => {
+          });
+        });
+      });
+    });
+
+    describe("when deleting using filesystem", () => {
+      it("and file exists", (done) => {
+        var test = new FileSystem();
+
+        var filePathAndName = `./../${uuid()}.json`;
+
+        var entity = {something: "two", peach: "old"};
+
+        test.save(filePathAndName, entity).then(() => {
+
+          entity.again = true;
+
+          //run it again
+          test.deleteFileSystemObject(filePathAndName).then(() => {
+            //now check it
+            test.fileSystemObjectExists(filePathAndName).then((exists)=> {
+              //console.log(exists);
+              expect(exists).to.equal(false);
+              done();
+            }).catch((error)=> {
+              //console.error(error);
+              expect(error).to.be.null;
+              done();
+            });
+          }).catch((error)=> {
             //console.error(error);
             expect(error).to.be.null;
             done();
           });
         });
       });
-    });
-  });
 
-  describe("when deleting using filesystem", () => {
-    it("and file exists", (done) => {
-      var test = new FileSystem();
+      it("and file does not exists", (done) => {
+        var test = new FileSystem();
 
-      var filePathAndName = `./../${uuid()}.json`;
+        var filePathAndName = `./../${uuid()}-${uuid()}.json`;
 
-      var entity = {something: "two", peach: "old"};
-
-      test.save(filePathAndName, entity).then(() => {
-
-        entity.again = true;
-
-        //run it again
         test.deleteFileSystemObject(filePathAndName).then(() => {
           //now check it
           test.fileSystemObjectExists(filePathAndName).then((exists)=> {
@@ -267,50 +331,27 @@ describe("FileSystemPromise unit tests", function () {
           done();
         });
       });
-    });
 
-    it("and file does not exists", (done) => {
-      var test = new FileSystem();
+      it("and file does not exists", (done) => {
+        var test = new FileSystem();
 
-      var filePathAndName = `./../${uuid()}-${uuid()}.json`;
+        var filePathAndName = `./../DeleteShouldNotExist${uuid()}.json`;
 
-      test.deleteFileSystemObject(filePathAndName).then(() => {
-        //now check it
-        test.fileSystemObjectExists(filePathAndName).then((exists)=> {
-          //console.log(exists);
-          expect(exists).to.equal(false);
-          done();
-        }).catch((error)=> {
-          //console.error(error);
+        try {
+          test.deleteFileSystemObject(filePathAndName).then((result) => {
+            //now check it
+            expect(result).to.equal(true);
+            done();
+          }).catch((error)=> {
+            //console.error(error);
+            expect(error).to.be.null;
+            done();
+          });
+        }
+        catch (error) {
           expect(error).to.be.null;
-          done();
-        });
-      }).catch((error)=> {
-        //console.error(error);
-        expect(error).to.be.null;
-        done();
+        }
       });
-    });
-
-    it("and file does not exists", (done) => {
-      var test = new FileSystem();
-
-      var filePathAndName = `./../DeleteShouldNotExist${uuid()}.json`;
-
-      try {
-        test.deleteFileSystemObject(filePathAndName).then((result) => {
-          //now check it
-          expect(result).to.equal(true);
-          done();
-        }).catch((error)=> {
-          //console.error(error);
-          expect(error).to.be.null;
-          done();
-        });
-      }
-      catch (error) {
-        expect(error).to.be.null;
-      }
     });
   });
 });
