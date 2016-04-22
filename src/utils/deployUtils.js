@@ -855,8 +855,35 @@ class DeployUtils {
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
   overwriteSwagger(apiGatewayId, swaggerEntity){
-    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity);
+    tsm.progressStart(`overwriting swagger for [ApiGatewayId: ${apiGatewayId}]`);
+
+    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity).then((data) => {
+      tsm.progressFinish(`overwrote swagger for [ApiGatewayId: ${apiGatewayId}]`);
+      return Promise.resolve(data);
+    }).catch((error)=>{
+      this.logMessage(`overwriteSwagger had an issue ${error.message}`);
+
+      if (error.stack){
+        this.logMessage(`overwriteSwagger had an issue ${error.stack}`);
+      }
+
+      return Promise.reject(error);
+    });
   };
+
+  /**
+   * This will write the text to teamcity by doing the following: "tsm.message({"text": text});" If tsm does not exist, it will log to the console doing following: "console.log(text)".
+   * @param {string} text
+   * @param {string} [propertyValue=text]
+   */
+  logMessage(text, propertyValue="text"){
+    if (tsm){
+      tsm.message({propertyValue: text});
+    }
+    else {
+      console.log(text);
+    }
+  }
 }
 
 function isWindows() {

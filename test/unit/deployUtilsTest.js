@@ -463,14 +463,25 @@ describe('When accessing deployUtils class', function () {
   });
 
   describe("should overwrite swagger", () => {
-    it("should overwrite swagger", (done) => {
-      this.timeout(3000);
+    let deployUtilOptions, apiId;
 
-      var deployUtilOptions = {
+    beforeEach(() => {
+      apiId = uuid();
+
+      deployUtilOptions = {
         region: uuid(),
         accessKey: uuid(),
         secretKey: uuid()
       };
+    });
+
+    afterEach(() => {
+      deployUtilOptions = null;
+      apiId = null;
+    });
+
+    it("should overwrite swagger", (done) => {
+      this.timeout(3000);
 
       var swaggerImporterClass = new module.swaggerImporterClass(deployUtilOptions.region);
       let overwriteCurrentSwaggerStub = sinon.stub(swaggerImporterClass, "overwriteCurrentSwagger", () => {
@@ -480,8 +491,6 @@ describe('When accessing deployUtils class', function () {
       deployUtilOptions["swaggerImporter"] = swaggerImporterClass;
 
       let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-
-      var apiId = uuid();
 
       deployUtils.overwriteSwagger(apiId, deployUtilOptions).then((data) => {
         console.log(data);
@@ -509,6 +518,29 @@ describe('When accessing deployUtils class', function () {
       }).catch((error)=> {
         console.error(error);
         expect(error).to.be.null;
+        done();
+      });
+    });
+
+    it("should reject promise", (done) => {
+      this.timeout(3000);
+
+      var swaggerImporterClass = new module.swaggerImporterClass(deployUtilOptions.region);
+      sinon.stub(swaggerImporterClass, "overwriteCurrentSwagger", () => {
+        return Promise.reject("Test");
+      });
+
+      deployUtilOptions["swaggerImporter"] = swaggerImporterClass;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+      deployUtils.overwriteSwagger(apiId, deployUtilOptions).then((data) => {
+        // should never get here
+        expect(data).to.equal(true);
+        done();
+      }).catch((error) => {
+        console.log(error);
+        expect(error).to.equal("Test");
+
         done();
       });
     });
