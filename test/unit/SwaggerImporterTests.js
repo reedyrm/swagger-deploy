@@ -13,179 +13,7 @@ chai.use(chaiAsPromised);
 
 describe("Swagger Importer unit tests", () => {
   //example from aws
-  var swagger = {
-    "swagger": "2.0",
-    "info": {
-      "version": "2016-02-23T05:36:54Z",
-      "title": "KV-JA-swagger-test"
-    },
-    "host": "a123456789.execute-api.us-east-1.amazonaws.com",
-    "basePath": "/test",
-    "schemes": [
-      "https"
-    ],
-    "paths": {
-      "/calc": {
-        "get": {
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "name": "operand2",
-              "in": "query",
-              "required": false,
-              "type": "string"
-            },
-            {
-              "name": "operator",
-              "in": "query",
-              "required": false,
-              "type": "string"
-            },
-            {
-              "name": "operand1",
-              "in": "query",
-              "required": false,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "200 response",
-              "schema": {
-                "$ref": "#/definitions/Empty"
-              },
-              "headers": {
-                "operand_1": {
-                  "type": "string"
-                },
-                "operand_2": {
-                  "type": "string"
-                },
-                "operator": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "x-amazon-apigateway-integration": {
-            "responses": {
-              "default": {
-                "statusCode": "200",
-                "responseParameters": {
-                  "method.response.header.operator": "integration.response.body.op",
-                  "method.response.header.operand_2": "integration.response.body.b",
-                  "method.response.header.operand_1": "integration.response.body.a"
-                },
-                "responseTemplates": {
-                  "application/json": "#set($res= $input.path('$'))\n{\n   \"result\": \"$res.a, $res.b, $res.op => $res.c\"\n}"
-                }
-              }
-            },
-            "requestTemplates": {
-              "application/json": "{\n    \"a\":  \"$input.params('operand1')\",\n    \"b\":  \"$input.params('operand2')\", \n    \"op\": \"$input.params('operator')\"   \n}"
-            },
-            "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
-            "httpMethod": "POST",
-            "type": "aws"
-          }
-        },
-        "post": {
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "200 response",
-              "schema": {
-                "$ref": "#/definitions/Empty"
-              },
-              "headers": {}
-            }
-          },
-          "x-amazon-apigateway-integration": {
-            "responses": {
-              "default": {
-                "statusCode": "200",
-                "responseTemplates": {
-                  "application/json": "__passthrough__"
-                }
-              }
-            },
-            "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
-            "httpMethod": "POST",
-            "type": "aws"
-          }
-        }
-      },
-      "/calc/{operand1}/{operand2}/{operator}": {
-        "get": {
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "name": "operand2",
-              "in": "path",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "name": "operator",
-              "in": "path",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "name": "operand1",
-              "in": "path",
-              "required": true,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "200 response",
-              "schema": {
-                "$ref": "#/definitions/Empty"
-              },
-              "headers": {
-                "Content-Type": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "x-amazon-apigateway-integration": {
-            "responses": {
-              "default": {
-                "statusCode": "200",
-                "responseParameters": {
-                  "method.response.header.Content-Type": "'text/plain'"
-                },
-                "responseTemplates": {
-                  "application/json": "\"$input.path('$.a') $input.path('$.op')  $input.path('$.b') = $input.path('$.c')\""
-                }
-              }
-            },
-            "requestTemplates": {
-              "application/json": "\n{\n   \"a\": \"$input.params('operand1')\",\n   \"b\": \"$input.params('operand2')\",\n   \"op\": #if($input.params('operator')=='%2F')\"/\"#{else}\"$input.params('operator')\"#end\n   \n}"
-            },
-            "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
-            "httpMethod": "POST",
-            "type": "aws"
-          }
-        }
-      }
-    },
-    "definitions": {
-      "Empty": {
-        "type": "object"
-      }
-    }
-  };
+  var swagger = require("./../test-swagger.json");
 
   let shouldFailTestException = new Error("this should fail");
   let swaggerImporter = null;
@@ -208,7 +36,7 @@ describe("Swagger Importer unit tests", () => {
         var date = new Date();
         var host = `apigateway.${awsSubDomainRegion}.amazonaws.com`;
 
-        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date);
+        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, true);
 
         expect(result.uri.host).to.equal(host);
         expect(result.uri.path).to.equal(`/restapis/${restApiId}`);
@@ -230,7 +58,7 @@ describe("Swagger Importer unit tests", () => {
         var payloadAsString = "";
         var host = `apigateway.${awsSubDomainRegion}.amazonaws.com`;
 
-        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString, sessionToken);
+        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, true, payloadAsString, sessionToken);
 
         expect(result.uri.host).to.equal(host);
         expect(result.uri.path).to.equal(`/restapis/${restApiId}`);
@@ -251,7 +79,7 @@ describe("Swagger Importer unit tests", () => {
         var payloadAsString = uuid();
         var host = `apigateway.${awsSubDomainRegion}.amazonaws.com`;
 
-        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString);
+        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, true, payloadAsString);
 
         expect(result.uri.host).to.equal(host);
         expect(result.uri.path).to.equal(`/restapis/${restApiId}`);
@@ -273,7 +101,7 @@ describe("Swagger Importer unit tests", () => {
         var host = `apigateway.${awsSubDomainRegion}.amazonaws.com`;
         var payloadAsString = uuid();
 
-        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString, sessionToken);
+        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, true, payloadAsString, sessionToken);
 
         expect(result.uri.host).to.equal(host);
         expect(result.uri.path).to.equal(`/restapis/${restApiId}`);
@@ -296,7 +124,7 @@ describe("Swagger Importer unit tests", () => {
         var payloadAsString = uuid();
 
         var authHeader = uuid();
-        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString, sessionToken, authHeader);
+        let result = swaggerImporter.getSwaggerOverwriteRequestParameters(restApiId, date, true, payloadAsString, sessionToken, authHeader);
 
         expect(result.uri.host).to.equal(host);
         expect(result.uri.path).to.equal(`/restapis/${restApiId}`);
@@ -456,7 +284,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers["X-Amz-Security-Token"]).to.be.undefined;
         expect(result.headers["Authorization"]).to.not.be.null;
         expect(result.uri.protocol).to.equal("https:");
-        expect(result.uri.query).to.equal("mode=overwrite");
+        expect(result.uri.query).to.equal("failonwarnings=false&mode=overwrite");
         expect(result.uri.host).to.equal(`apigateway.${awsSubDomainRegion}.amazonaws.com`);
         expect(result.body).to.equal(JSON.stringify(swaggerJson));
       });
@@ -477,7 +305,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers["X-Amz-Security-Token"]).to.equal(sessionToken);
         expect(result.headers["Authorization"]).to.not.be.null;
         expect(result.uri.protocol).to.equal("https:");
-        expect(result.uri.query).to.equal("mode=overwrite");
+        expect(result.uri.query).to.equal("failonwarnings=false&mode=overwrite");
         expect(result.uri.host).to.equal(`apigateway.${awsSubDomainRegion}.amazonaws.com`);
         expect(result.body).to.equal(JSON.stringify(swaggerJson));
       });
@@ -494,8 +322,10 @@ describe("Swagger Importer unit tests", () => {
           "your secret key",
           "h2silvhe8h", /*this is the api gateway key*/
           date,
-          swagger).then((something) => {
-          console.log("here");
+          swagger,
+          null,
+          false).then((something) => {
+
           console.log(something);
           done();
         }).catch((error) => {
@@ -637,6 +467,28 @@ describe("Swagger Importer unit tests", () => {
 
             expect(value).to.equal(expected);
           });
+
+          it("it should return another", () => {
+            var propertyOne = "prop" + uuid();
+            var valueOne = "value " + uuid();
+            var propertyTwo = "prop" + uuid();
+            var valueTwo = "value " + uuid();
+
+            var entity = {};
+            entity[propertyOne] = valueOne;
+            entity[propertyTwo] = valueTwo;
+
+            let expected = `${propertyOne}=${valueOne}&${propertyTwo}=${valueTwo}&`;
+
+            var value = SwaggerImporter.parseObjectToString(entity, "=", "&", true);
+            //console.log(value);
+            value = value.replace(/\n/g, "&");
+
+            console.log(value);
+            console.log(expected);
+
+            expect(value).to.equal(expected);
+          });
         });
 
         describe("and only want property names", () => {
@@ -664,7 +516,7 @@ describe("Swagger Importer unit tests", () => {
       let apiId = uuid();
       let payloadAsString = JSON.stringify(swagger);
 
-      let signatureHeaders = SwaggerImporter.parseObjectToString(swaggerImporter.getSwaggerOverwriteRequestParameters(apiId, date, payloadAsString).headers, ";", "", false);
+      let signatureHeaders = SwaggerImporter.parseObjectToString(swaggerImporter.getSwaggerOverwriteRequestParameters(apiId, date, true, payloadAsString).headers, ";", "", false);
       let expectedCredentialsClause = `Credential=${accessKeyId}/${swaggerImporter.getIsoDate(date, true)}/${awsSubDomainRegion}/apigateway/aws4_request`;
 
       let result = swaggerImporter.getAuthorizationHeader(
@@ -672,6 +524,7 @@ describe("Swagger Importer unit tests", () => {
         secretAccessKey,
         apiId,
         date,
+        false,
         payloadAsString);
 
       expect(result).to.not.be.null;

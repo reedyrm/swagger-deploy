@@ -1,0 +1,173 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2016-02-23T05:36:54Z",
+    "title": "KV-JA-swagger-test"
+  },
+  "host": "a123456789.execute-api.us-east-1.amazonaws.com",
+  "basePath": "/test",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/calc": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "operand2",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operand1",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            },
+            "headers": {
+              "operand_1": {
+                "type": "string"
+              },
+              "operand_2": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.operator": "integration.response.body.op",
+                "method.response.header.operand_2": "integration.response.body.b",
+                "method.response.header.operand_1": "integration.response.body.a"
+              },
+              "responseTemplates": {
+                "application/json": "#set($res= $input.path('$'))\n{\n   \"result\": \"$res.a, $res.b, $res.op => $res.c\"\n}"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\n    \"a\":  \"$input.params('operand1')\",\n    \"b\":  \"$input.params('operand2')\", \n    \"op\": \"$input.params('operator')\"   \n}"
+          },
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
+          "httpMethod": "POST",
+          "type": "aws"
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            },
+            "headers": {}
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "__passthrough__"
+              }
+            }
+          },
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
+          "httpMethod": "POST",
+          "type": "aws"
+        }
+      }
+    },
+    "/calc/{operand1}/{operand2}/{operator}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "operand2",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operand1",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'text/plain'"
+              },
+              "responseTemplates": {
+                "application/json": "\"$input.path('$.a') $input.path('$.op')  $input.path('$.b') = $input.path('$.c')\""
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "\n{\n   \"a\": \"$input.params('operand1')\",\n   \"b\": \"$input.params('operand2')\",\n   \"op\": #if($input.params('operator')=='%2F')\"/\"#{else}\"$input.params('operator')\"#end\n   \n}"
+          },
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path//2015-03-31/functions/arn:aws:lambda:us-west-2:677310820158:function:Calc/invocations",
+          "httpMethod": "POST",
+          "type": "aws"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Empty": {
+      "type": "object"
+    }
+  }
+}

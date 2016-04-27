@@ -77,9 +77,10 @@ class SwaggerImporter {
    * @param {Date} date
    * @param {object} [swaggerJson=null]
    * @param {string} [sessionToken=null]
+   * @param {boolean} [overrideWarnings=false] This is exposed, but from testing this doesn't work. (It is an aws bug)
    * @return {Promise}
    */
-  overwriteCurrentSwagger(accessKeyId, secretAccessKey, restApiId, date, swaggerJson=null, sessionToken=null) {
+  overwriteCurrentSwagger(accessKeyId, secretAccessKey, restApiId, date, swaggerJson = null, sessionToken = null, overrideWarnings = false) {
     if (util.isNullOrUndefined(accessKeyId)) {
       return Promise.reject(new Error("accessKeyId is undefined or null"));
     }
@@ -102,6 +103,7 @@ class SwaggerImporter {
 
     /**
      * @inheritDoc http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-import-api.html
+     * @inheritDoc http://docs.aws.amazon.com/apigateway/api-reference/making-http-requests/
      *
      * Note: from research, when a api is created, it is this syntax:
      * https://<api-id>.execute-api.<region>.amazonaws.com
@@ -114,21 +116,22 @@ class SwaggerImporter {
 
     var payloadAsString = JSON.stringify(swaggerJson);
 
-    var auth = this.getAuthorizationHeader(accessKeyId, secretAccessKey, restApiId, date, payloadAsString, sessionToken);
+    var auth = this.getAuthorizationHeader(accessKeyId, secretAccessKey, restApiId, date, overrideWarnings, payloadAsString, sessionToken);
 
-    return rp(this.getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString, sessionToken, auth));
+    return rp(this.getSwaggerOverwriteRequestParameters(restApiId, date, overrideWarnings, payloadAsString, sessionToken, auth));
   }
 
   /**
    *
    * @param {string} restApiId
    * @param {Date} date
+   * @param {boolean} overrideWarnings
    * @param {string} [payloadAsString=""]
    * @param {string} [sessionToken=null]
    * @param {string} [authHeader=null]
    * @return {{uri: string, method: string, headers: *, body: *, qs: {mode: string}}}
    */
-  getSwaggerOverwriteRequestParameters(restApiId, date, payloadAsString="", sessionToken=null, authHeader=null) {
+  getSwaggerOverwriteRequestParameters(restApiId, date, overrideWarnings, payloadAsString = "", sessionToken = null, authHeader = null) {
     var uri = `https://${this.getHost()}${this.getUriPath(restApiId)}`;
 
     var headers = this.getHeaders(date, sessionToken);
@@ -137,12 +140,17 @@ class SwaggerImporter {
       headers["Authorization"] = authHeader;
     }
 
+    if (!util.isBoolean(overrideWarnings)){
+      throw new Error("overrideWarnings must be a boolean.")
+    }
+
     return {
       uri: url.parse(uri),
       method: 'PUT',
       headers: headers,
       body: payloadAsString,
       qs: {
+        failonwarnings: overrideWarnings,
         mode: "overwrite"
       }
     };
@@ -202,7 +210,18 @@ class SwaggerImporter {
     return `apigateway.${this.awsSubDomainRegion}.amazonaws.com`
   }
 
-  getAuthorizationHeader(accessKeyId, secretAccessKey, apiId, date, payloadAsString="", sessionToken=null) {
+  /**
+   *
+   * @param {string} accessKeyId
+   * @param {string} secretAccessKey
+   * @param {string} apiId
+   * @param {Date} date
+   * @param {boolean} overrideWarnings
+   * @param {string} [payloadAsString=""]
+   * @param {string} [sessionToken=null]
+   * @return {*|string}
+   */
+  getAuthorizationHeader(accessKeyId, secretAccessKey, apiId, date, overrideWarnings, payloadAsString = "", sessionToken = null) {
     if (util.isNullOrUndefined(accessKeyId)) {
       throw new Error("accessKeyId is undefined or null");
     }
@@ -215,18 +234,26 @@ class SwaggerImporter {
       throw new Error("apiId is undefined or null");
     }
 
-    var requestParameters = this.getSwaggerOverwriteRequestParameters(apiId, date, payloadAsString, sessionToken, null);
+    let createCanonicalAndTrim = (entity, equality, newline) => {
+      var canonicalLine = SwaggerImporter.parseObjectToString(entity, equality, newline);
+      canonicalLine = canonicalLine.substr(0, canonicalLine.lastIndexOf(newline));
+
+      return canonicalLine;
+    };
+
+    let requestParameters = this.getSwaggerOverwriteRequestParameters(apiId, date, overrideWarnings, payloadAsString, sessionToken, null);
 
     let signedHeaders = SwaggerImporter.parseObjectToString(requestParameters.headers, ";", "", false);
 
-    var canonicalHeaders = SwaggerImporter.parseObjectToString(requestParameters.headers, ":", "~", true);
-    canonicalHeaders = canonicalHeaders.substr(0, canonicalHeaders.lastIndexOf("~"));
+    let canonicalHeaders = createCanonicalAndTrim(requestParameters.headers, ":", "~");
     canonicalHeaders = canonicalHeaders.replace(/~/g, "\n");
+
+    let canonicalQueryString = createCanonicalAndTrim(requestParameters.qs, "=", "&");
 
     let request = sigv4.canonicalRequest(
       requestParameters.method,                                           //httpRequestMethod
       this.getUriPath(apiId),                                             //canonicalURI
-      SwaggerImporter.parseObjectToString(requestParameters.qs, "=", ""), //canonicalQueryString
+      canonicalQueryString,                                               //canonicalQueryString
       canonicalHeaders,                                                   //canonicalHeaders
       signedHeaders,                                                      //signedHeaders
       payloadAsString                                                     //payload
