@@ -77,10 +77,10 @@ class SwaggerImporter {
    * @param {Date} date
    * @param {object} [swaggerJson=null]
    * @param {string} [sessionToken=null]
-   * @param {boolean} [overrideWarnings=false] This is exposed, but from testing this doesn't work. (It is an aws bug)
+   * @param {boolean} [failOnWarnings=false] This is exposed for aws. If aws' swagger 2.0 validator fails (it's not a true swagger 2.0 validator) you can ignore the warnings and let it continue to process the object.
    * @return {Promise}
    */
-  overwriteCurrentSwagger(accessKeyId, secretAccessKey, restApiId, date, swaggerJson = null, sessionToken = null, overrideWarnings = false) {
+  overwriteCurrentSwagger(accessKeyId, secretAccessKey, restApiId, date, swaggerJson = null, sessionToken = null, failOnWarnings = false) {
     if (util.isNullOrUndefined(accessKeyId)) {
       return Promise.reject(new Error("accessKeyId is undefined or null"));
     }
@@ -116,23 +116,23 @@ class SwaggerImporter {
 
     var payloadAsString = JSON.stringify(swaggerJson);
 
-    var auth = this.getAuthorizationHeader(accessKeyId, secretAccessKey, restApiId, date, overrideWarnings, payloadAsString, sessionToken);
+    var auth = this.getAuthorizationHeader(accessKeyId, secretAccessKey, restApiId, date, failOnWarnings, payloadAsString, sessionToken);
 
-    return rp(this.getSwaggerOverwriteRequestParameters(restApiId, date, overrideWarnings, payloadAsString, sessionToken, auth));
+    return rp(this.getSwaggerOverwriteRequestParameters(restApiId, date, failOnWarnings, payloadAsString, sessionToken, auth));
   }
 
   /**
    *
    * @param {string} restApiId
    * @param {Date} date
-   * @param {boolean} overrideWarnings
+   * @param {boolean} failOnWarnings This is exposed for aws. If aws' swagger 2.0 validator fails (it's not a true swagger 2.0 validator) you can ignore the warnings and let it continue to process the object.
    * @param {string} [payloadAsString=""]
    * @param {string} [sessionToken=null]
    * @param {string} [authHeader=null]
    * @return {{uri: string, method: string, headers: *, body: *, qs: {mode: string}}}
    */
-  getSwaggerOverwriteRequestParameters(restApiId, date, overrideWarnings, payloadAsString = "", sessionToken = null, authHeader = null) {
-    var uri = `https://${this.getHost()}${this.getUriPath(restApiId)}`;
+  getSwaggerOverwriteRequestParameters(restApiId, date, failOnWarnings, payloadAsString = "", sessionToken = null, authHeader = null) {
+    var uri = `https://${this.getHost()}${SwaggerImporter.getUriPath(restApiId)}`;
 
     var headers = this.getHeaders(date, sessionToken);
 
@@ -140,8 +140,8 @@ class SwaggerImporter {
       headers["Authorization"] = authHeader;
     }
 
-    if (!util.isBoolean(overrideWarnings)){
-      throw new Error("overrideWarnings must be a boolean.")
+    if (!util.isBoolean(failOnWarnings)) {
+      throw new Error("failOnWarnings must be a boolean.")
     }
 
     return {
@@ -150,7 +150,7 @@ class SwaggerImporter {
       headers: headers,
       body: payloadAsString,
       qs: {
-        failonwarnings: overrideWarnings,
+        failonwarnings: failOnWarnings,
         mode: "overwrite"
       }
     };
@@ -162,7 +162,7 @@ class SwaggerImporter {
    * @param {boolean} dateOnly
    * @return {string}
    */
-  getIsoDate(date, dateOnly) {
+  static getIsoDate(date, dateOnly) {
     var dateOnlyFormat = DateFormat(date, "yyyymmdd");
     if (dateOnly) {
       return dateOnlyFormat;
@@ -181,7 +181,7 @@ class SwaggerImporter {
     var headers = {
       "Content-Type": "application/json",
       "Host": this.getHost(),
-      "X-Amz-Date": this.getIsoDate(date, false)
+      "X-Amz-Date": SwaggerImporter.getIsoDate(date, false)
     };
 
     if (util.isNullOrUndefined(sessionToken) || sessionToken === "") {
@@ -197,7 +197,7 @@ class SwaggerImporter {
    * @param {string} restApiId
    * @return {string}
    */
-  getUriPath(restApiId) {
+  static getUriPath(restApiId) {
     return `/restapis/${restApiId}`;
   }
 
@@ -216,12 +216,12 @@ class SwaggerImporter {
    * @param {string} secretAccessKey
    * @param {string} apiId
    * @param {Date} date
-   * @param {boolean} overrideWarnings
+   * @param {boolean} failOnWarnings This is exposed for aws. If aws' swagger 2.0 validator fails (it's not a true swagger 2.0 validator) you can ignore the warnings and let it continue to process the object.
    * @param {string} [payloadAsString=""]
    * @param {string} [sessionToken=null]
    * @return {*|string}
    */
-  getAuthorizationHeader(accessKeyId, secretAccessKey, apiId, date, overrideWarnings, payloadAsString = "", sessionToken = null) {
+  getAuthorizationHeader(accessKeyId, secretAccessKey, apiId, date, failOnWarnings, payloadAsString = "", sessionToken = null) {
     if (util.isNullOrUndefined(accessKeyId)) {
       throw new Error("accessKeyId is undefined or null");
     }
@@ -241,7 +241,7 @@ class SwaggerImporter {
       return canonicalLine;
     };
 
-    let requestParameters = this.getSwaggerOverwriteRequestParameters(apiId, date, overrideWarnings, payloadAsString, sessionToken, null);
+    let requestParameters = this.getSwaggerOverwriteRequestParameters(apiId, date, failOnWarnings, payloadAsString, sessionToken, null);
 
     let signedHeaders = SwaggerImporter.parseObjectToString(requestParameters.headers, ";", "", false);
 
@@ -252,7 +252,7 @@ class SwaggerImporter {
 
     let request = sigv4.canonicalRequest(
       requestParameters.method,                                           //httpRequestMethod
-      this.getUriPath(apiId),                                             //canonicalURI
+      SwaggerImporter.getUriPath(apiId),                                             //canonicalURI
       canonicalQueryString,                                               //canonicalQueryString
       canonicalHeaders,                                                   //canonicalHeaders
       signedHeaders,                                                      //signedHeaders
@@ -263,13 +263,13 @@ class SwaggerImporter {
     //console.log(request);
 
     let algorithm = 'AWS4-HMAC-SHA256';
-    var isoDateOnly = this.getIsoDate(date, true);
+    var isoDateOnly = SwaggerImporter.getIsoDate(date, true);
 
     let credentialScope = `${isoDateOnly}/${this.awsSubDomainRegion}/apigateway/aws4_request`;
 
     let stringToSign = sigv4.stringToSign(
       algorithm,
-      this.getIsoDate(date, false),
+      SwaggerImporter.getIsoDate(date, false),
       credentialScope,
       sigv4.hash(request));
 

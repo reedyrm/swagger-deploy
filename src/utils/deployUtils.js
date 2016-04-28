@@ -852,12 +852,13 @@ class DeployUtils {
    * @param {string} apiGatewayId
    * @param {object} swaggerEntity
    * @return {Promise} it's the response data promise from a request-promise
+   * @param {boolean} [overrideWarnings=false] This is exposed, but from testing this doesn't work. (It is an aws bug)
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
-  overwriteSwagger(apiGatewayId, swaggerEntity){
+  overwriteSwagger(apiGatewayId, swaggerEntity, overrideWarnings = false){
     tsm.progressStart(`overwriting swagger for [ApiGatewayId: ${apiGatewayId}]`);
 
-    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity).then((data) => {
+    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity, null, overrideWarnings).then((data) => {
       tsm.progressFinish(`overwrote swagger for [ApiGatewayId: ${apiGatewayId}]`);
       return Promise.resolve(data);
     }).catch((error)=>{
@@ -878,11 +879,29 @@ class DeployUtils {
    */
   logMessage(text, propertyValue="text"){
     if (tsm){
-      tsm.message({propertyValue: text});
+      var newVar = {};
+      newVar[propertyValue] = text;
+
+      tsm.message(newVar);
     }
     else {
       console.log(text);
     }
+  }
+
+  /**
+   * append a build number pattern to the packageJson.version
+   * @param {object} packageJson
+   * @param {string} [pattern='.{build.number}']
+   */
+  setBuildNumber(packageJson, pattern='.{build.number}'){
+    if (util.isNullOrUndefined(packageJson)){
+      var error = new Error("Failure. packageJson is null or undefined");
+      this.logMessage(error.message);
+      throw error;
+    }
+
+    tsm.buildNumber(packageJson.version + pattern);
   }
 }
 

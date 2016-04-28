@@ -6,7 +6,6 @@ let chai = require('chai'),
   chaiAsPromised = require('chai-as-promised'),
   uuid = require("node-uuid"),
   CloudFrontService = require('../../src/utils/cloudfrontService.js'),
-  sinonAsPromised = require('sinon-as-promised'),
   module = require('../../src/index.js');
 
 chai.use(chaiAsPromised);

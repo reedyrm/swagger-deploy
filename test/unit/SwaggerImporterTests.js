@@ -46,7 +46,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers).to.have.property("Host", host);
         expect(result.headers["X-Amz-Security-Token"]).to.equal(undefined);
         expect(result.headers["Authorization"]).to.equal(undefined);
-        expect(result.headers).to.have.property("X-Amz-Date", swaggerImporter.getIsoDate(date, false));
+        expect(result.headers).to.have.property("X-Amz-Date", SwaggerImporter.getIsoDate(date, false));
       });
     });
 
@@ -68,7 +68,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers).to.have.property("Host", host);
         expect(result.headers["X-Amz-Security-Token"]).to.equal(sessionToken);
         expect(result.headers["Authorization"]).to.equal(undefined);
-        expect(result.headers).to.have.property("X-Amz-Date", swaggerImporter.getIsoDate(date, false));
+        expect(result.headers).to.have.property("X-Amz-Date", SwaggerImporter.getIsoDate(date, false));
       });
     });
 
@@ -89,7 +89,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers).to.have.property("Host", host);
         expect(result.headers["X-Amz-Security-Token"]).to.equal(undefined);
         expect(result.headers["Authorization"]).to.equal(undefined);
-        expect(result.headers).to.have.property("X-Amz-Date", swaggerImporter.getIsoDate(date, false));
+        expect(result.headers).to.have.property("X-Amz-Date", SwaggerImporter.getIsoDate(date, false));
       });
     });
 
@@ -111,7 +111,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers).to.have.property("Host", host);
         expect(result.headers["X-Amz-Security-Token"]).to.equal(sessionToken);
         expect(result.headers["Authorization"]).to.equal(undefined);
-        expect(result.headers).to.have.property("X-Amz-Date", swaggerImporter.getIsoDate(date, false));
+        expect(result.headers).to.have.property("X-Amz-Date", SwaggerImporter.getIsoDate(date, false));
       });
     });
 
@@ -134,7 +134,7 @@ describe("Swagger Importer unit tests", () => {
         expect(result.headers).to.have.property("Host", host);
         expect(result.headers["X-Amz-Security-Token"]).to.equal(sessionToken);
         expect(result.headers["Authorization"]).to.equal(authHeader);
-        expect(result.headers).to.have.property("X-Amz-Date", swaggerImporter.getIsoDate(date, false));
+        expect(result.headers).to.have.property("X-Amz-Date", SwaggerImporter.getIsoDate(date, false));
       });
     });
   });
@@ -143,7 +143,7 @@ describe("Swagger Importer unit tests", () => {
     describe("and date only", () => {
       it("should do stuff", () => {
         var date = new Date();
-        let result = swaggerImporter.getIsoDate(date, true);
+        let result = SwaggerImporter.getIsoDate(date, true);
 
         var month = date.getMonth() + 1;
         var monthString = month < 10 ? `0${month}` : `${month}`;
@@ -158,7 +158,7 @@ describe("Swagger Importer unit tests", () => {
       it("should do stuff", () => {
         var date = new Date();
 
-        let result = swaggerImporter.getIsoDate(date, false);
+        let result = SwaggerImporter.getIsoDate(date, false);
 
         var month = date.getUTCMonth() + 1;
         var monthString = month < 10 ? `0${month}` : `${month}`;
@@ -517,7 +517,7 @@ describe("Swagger Importer unit tests", () => {
       let payloadAsString = JSON.stringify(swagger);
 
       let signatureHeaders = SwaggerImporter.parseObjectToString(swaggerImporter.getSwaggerOverwriteRequestParameters(apiId, date, true, payloadAsString).headers, ";", "", false);
-      let expectedCredentialsClause = `Credential=${accessKeyId}/${swaggerImporter.getIsoDate(date, true)}/${awsSubDomainRegion}/apigateway/aws4_request`;
+      let expectedCredentialsClause = `Credential=${accessKeyId}/${SwaggerImporter.getIsoDate(date, true)}/${awsSubDomainRegion}/apigateway/aws4_request`;
 
       let result = swaggerImporter.getAuthorizationHeader(
         accessKeyId,
