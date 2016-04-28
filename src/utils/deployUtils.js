@@ -56,7 +56,7 @@ class DeployUtils {
 
   _deployApiGatewayToStage(apiGatewayId, stageName, stageFullName, callback) {
     tsm.progressStart(`Deploying to '${stageFullName}' Environment`);
-    Promise.delay(20000).then(function() {
+    Promise.delay(20000).then(() => {
       try {
         let apiGatewayParams = {
           apiVersion: '2015-07-09',
@@ -93,7 +93,7 @@ class DeployUtils {
         });
       }
       catch (err) {
-        tsm.message(`DeployApiGatewayToStage Error: ${err}`);
+        tsm.message({text:`DeployApiGatewayToStage Error: ${err}`, status: 'ERROR'});
       }
     });
   };
@@ -118,7 +118,7 @@ class DeployUtils {
         apigatewayClient.getRestApis(params, function (err, data) {
           if (err) {
             let errorMessage = `Error: ${err}| Error Stack Trace: ${err.stack}`;
-            tsm.message({text: errorMessage});
+            tsm.message({text: errorMessage, status:'ERROR'});
             reject(errorMessage);
           } // an error occurred
           else { // successful response
@@ -140,7 +140,7 @@ class DeployUtils {
       }
       catch (err) {
         let errorMessage = `LookupApiGatewayByName Error: ${err}`;
-        tsm.message({text: errorMessage});
+        tsm.message({text: errorMessage, status: 'ERROR'});
         reject(errorMessage);
       }
     }).asCallback(callback);
