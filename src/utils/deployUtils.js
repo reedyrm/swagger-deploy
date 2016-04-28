@@ -15,6 +15,7 @@ let lib_directory = '../../lib';
 let uuid = require('node-uuid');
 let fs = require('fs');
 let Promise = require('bluebird');
+let util = require('util');
 
 class DeployUtils {
 
