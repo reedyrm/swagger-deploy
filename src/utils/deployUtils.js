@@ -10,7 +10,6 @@ let gulpUtil = require('gulp-util');
 let path = require('path');
 let mocha = require("gulp-spawn-mocha");
 let CloudFrontService = require('./cloudfrontService.js');
-let SwaggerImporter = require('./SwaggerImporter.js');
 let lib_directory = '../../lib';
 let uuid = require('node-uuid');
 let fs = require('fs');
@@ -26,11 +25,17 @@ class DeployUtils {
     this._accessKey = opts.accessKey || '';
     this._secretKey = opts.secretKey || '';
     this._region = opts.region || '';
+
     this._cloudFrontService = opts.cloudfrontService || new CloudFrontService({
         accessKey: this._accessKey,
         secretKey: this._secretKey
       });
-    this._swaggerImporter = opts.swaggerImporter || new SwaggerImporter(this._region);
+
+    this._apiGateway = opts.apiGateway || new AWS.APIGateway({
+        accessKey: this._accessKey,
+        secretKey: this._secretKey,
+        region: this._region
+      });
   }
 
   deployApiGatewayToInt(apiGatewayId, callback) {
@@ -312,7 +317,6 @@ class DeployUtils {
       });
     }).asCallback(callback);
   }
-
 
   configureApiGatewaySettings(stageName, restApiId, patchOps, callback) {
     return new Promise((resolve, reject) => {
@@ -853,23 +857,51 @@ class DeployUtils {
    * @param {string} apiGatewayId
    * @param {object} swaggerEntity
    * @return {Promise} it's the response data promise from a request-promise
-   * @param {boolean} [overrideWarnings=false] This is exposed, but from testing this doesn't work. (It is an aws bug)
+   * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
-  overwriteSwagger(apiGatewayId, swaggerEntity, overrideWarnings = false){
+  overwriteSwagger(apiGatewayId, swaggerEntity, failOnWarnings = false){
     tsm.progressStart(`overwriting swagger for [ApiGatewayId: ${apiGatewayId}]`);
 
-    return this._swaggerImporter.overwriteCurrentSwagger(this._accessKey, this._secretKey, apiGatewayId, new Date(), swaggerEntity, null, overrideWarnings).then((data) => {
-      tsm.progressFinish(`overwrote swagger for [ApiGatewayId: ${apiGatewayId}]`);
-      return Promise.resolve(data);
-    }).catch((error)=>{
-      this.logMessage(`overwriteSwagger had an issue ${error.message}`);
+    var options = {
+      restApiId: apiGatewayId,
+      body: JSON.stringify(swaggerEntity),
+      failOnWarnings: failOnWarnings,
+      mode: "overwrite"
+    };
 
-      if (error.stack){
-        this.logMessage(`overwriteSwagger had an issue ${error.stack}`);
-      }
+    return new Promise((resolve, reject) => {
+      this._apiGateway.putRestApi(options, function (err, data) {
+        if (err) {
+          return reject(err);
+        }
 
-      return Promise.reject(error);
+        return resolve(data);
+      });
+    });
+  };
+
+  /**
+   *
+   * @param {object} swaggerEntity
+   * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
+     */
+  createSwagger(swaggerEntity, failOnWarnings = false) {
+    tsm.progressStart(`overwriting swagger for [Swagger Title: ${swaggerEntity.info.title}]`);
+
+    var options = {
+      body: JSON.stringify(swaggerEntity),
+      failOnWarnings: failOnWarnings
+    };
+
+    return new Promise((resolve, reject) => {
+      this._apiGateway.importRestApi(options, function (err, data) {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(data);
+      });
     });
   };
 

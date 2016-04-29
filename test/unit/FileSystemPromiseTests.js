@@ -57,6 +57,8 @@ describe("FileSystemPromise unit tests", function () {
 
           //console.log(err);
 
+          fs.unlinkSync(filePathAndName);
+
           done();
         });
       }).catch((error)=> {
@@ -90,6 +92,7 @@ describe("FileSystemPromise unit tests", function () {
 
             //console.log(err);
 
+            fs.unlinkSync(filePathAndName);
             done();
           });
         });
@@ -261,9 +264,14 @@ describe("FileSystemPromise unit tests", function () {
               test.fileSystemObjectExists(filePathAndName).then((exists) => {
                 //console.log(exists);
                 expect(exists).to.equal(true);
+
+                fs.unlinkSync(filePathAndName);
+
                 done();
               }).catch((error) => {
                 //console.error(error);
+                fs.unlinkSync(filePathAndName);
+
                 expect(error).to.be.null;
                 done();
               });

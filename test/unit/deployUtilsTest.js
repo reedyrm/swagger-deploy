@@ -482,36 +482,37 @@ describe('When accessing deployUtils class', function () {
     it("should overwrite swagger", (done) => {
       this.timeout(3000);
 
-      var swaggerImporterClass = new module.swaggerImporterClass(deployUtilOptions.region);
-      let overwriteCurrentSwaggerStub = sinon.stub(swaggerImporterClass, "overwriteCurrentSwagger", () => {
-        return Promise.resolve("Test");
+      var aws = {
+        putRestApi : () => {}
+      };
+
+      var expected = {
+        id : uuid(),
+        name: uuid(),
+        createdDate: new Date()
+      };
+
+      let putRestApiStub = sinon.stub(aws, "putRestApi", (opts, callback) => {
+          callback(null, expected);
       });
 
-      deployUtilOptions["swaggerImporter"] = swaggerImporterClass;
+      deployUtilOptions["apiGateway"] = aws;
 
       let deployUtils = new module.deployUtilsClass(deployUtilOptions);
 
       deployUtils.overwriteSwagger(apiId, deployUtilOptions).then((data) => {
-        console.log(data);
 
-        console.log(overwriteCurrentSwaggerStub.args);
+        expect(data.id).to.equal(expected.id);
+        expect(data.name).to.equal(expected.name);
+        expect(data.createdDate).to.equal(expected.createdDate);
 
-        var stubArguments = overwriteCurrentSwaggerStub.args[0];
+        var restApiStub = putRestApiStub.args[0][0];
+        console.log(restApiStub);
 
-        console.log(stubArguments[0]);
-        expect(stubArguments[0]).to.be.equal(deployUtilOptions.accessKey);
-
-        console.log(stubArguments[1]);
-        expect(stubArguments[1]).to.be.equal(deployUtilOptions.secretKey);
-
-        console.log(stubArguments[2]);
-        expect(stubArguments[2]).to.be.equal(apiId);
-
-        console.log(stubArguments[3]);
-        expect(stubArguments[3]).to.be.an.instanceof(Date);
-
-        console.log(stubArguments[4]);
-        expect(stubArguments[4]).to.be.equal(deployUtilOptions);
+        expect(restApiStub.restApiId).to.equal(apiId);
+        expect(restApiStub.body).to.equal(JSON.stringify(deployUtilOptions));
+        expect(restApiStub.failOnWarnings).to.equal(false);
+        expect(restApiStub.mode).to.equal("overwrite");
 
         done();
       }).catch((error)=> {
@@ -524,12 +525,15 @@ describe('When accessing deployUtils class', function () {
     it("should reject promise", (done) => {
       this.timeout(3000);
 
-      var swaggerImporterClass = new module.swaggerImporterClass(deployUtilOptions.region);
-      sinon.stub(swaggerImporterClass, "overwriteCurrentSwagger", () => {
-        return Promise.reject("Test");
+      var aws = {
+        putRestApi : () => {}
+      };
+
+      let putRestApiStub = sinon.stub(aws, "putRestApi", (opts, callback) => {
+        callback("Test", null);
       });
 
-      deployUtilOptions["swaggerImporter"] = swaggerImporterClass;
+      deployUtilOptions["apiGateway"] = aws;
 
       let deployUtils = new module.deployUtilsClass(deployUtilOptions);
       deployUtils.overwriteSwagger(apiId, deployUtilOptions).then((data) => {
@@ -539,6 +543,116 @@ describe('When accessing deployUtils class', function () {
       }).catch((error) => {
         console.log(error);
         expect(error).to.equal("Test");
+
+        var restApiStub = putRestApiStub.args[0][0];
+        console.log(restApiStub);
+
+        expect(restApiStub.restApiId).to.equal(apiId);
+        expect(restApiStub.body).to.equal(JSON.stringify(deployUtilOptions));
+        expect(restApiStub.failOnWarnings).to.equal(false);
+        expect(restApiStub.mode).to.equal("overwrite");
+
+        done();
+      });
+    });
+  });
+
+  describe("should create swagger", () => {
+    let deployUtilOptions, apiId;
+
+    beforeEach(() => {
+      apiId = uuid();
+
+      deployUtilOptions = {
+        region: uuid(),
+        accessKey: uuid(),
+        secretKey: uuid()
+      };
+    });
+
+    afterEach(() => {
+      deployUtilOptions = null;
+      apiId = null;
+    });
+
+    it("should create swagger", (done) => {
+      this.timeout(3000);
+
+      var aws = {
+        importRestApi: () => {
+        }
+      };
+
+      var expected = {
+        id: uuid(),
+        name: uuid(),
+        createdDate: new Date()
+      };
+
+      let putRestApiStub = sinon.stub(aws, "importRestApi", (opts, callback) => {
+        callback(null, expected);
+      });
+
+      deployUtilOptions["apiGateway"] = aws;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+
+      var mockSwagger = {info: {title: `title: ${expected.name}`}};
+
+      deployUtils.createSwagger(mockSwagger).then((data) => {
+        expect(data.id).to.equal(expected.id);
+        expect(data.name).to.equal(expected.name);
+        expect(data.createdDate).to.equal(expected.createdDate);
+
+        var restApiStub = putRestApiStub.args[0][0];
+        console.log(restApiStub);
+
+        expect(restApiStub.body).to.equal(JSON.stringify(mockSwagger));
+        expect(restApiStub.failOnWarnings).to.equal(false);
+
+        done();
+      }).catch((error)=> {
+        console.error(error);
+        expect(error).to.be.null;
+        done();
+      });
+    });
+
+    it("should reject promise", (done) => {
+      this.timeout(3000);
+
+      var aws = {
+        importRestApi : () => {}
+      };
+
+      var expected = {
+        id: uuid(),
+        name: uuid(),
+        createdDate: new Date()
+      };
+
+      var mockSwagger = {info: {title: `title: ${expected.name}`}};
+
+      let putRestApiStub = sinon.stub(aws, "importRestApi", (opts, callback) => {
+        callback("Test", null);
+      });
+
+      deployUtilOptions["apiGateway"] = aws;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+      deployUtils.createSwagger(mockSwagger).then((data) => {
+        // should never get here
+        expect(data).to.equal(true);
+        done();
+      }).catch((error) => {
+        console.log(error);
+        expect(error).to.equal("Test");
+
+        var restApiStub = putRestApiStub.args[0][0];
+        console.log(restApiStub);
+
+        expect(restApiStub.body).to.equal(JSON.stringify(mockSwagger));
+        expect(restApiStub.failOnWarnings).to.equal(false);
 
         done();
       });
