@@ -33,6 +33,24 @@ describe('When accessing deployUtils class', function () {
     expect(DeployUtils._accessKey).to.be.equal(params.accessKey);
   });
 
+  it("should assign properties to a new ApiGateway", () => {
+    let params = {
+      accessKey: uuid(),
+      secretKey: uuid(),
+      region: uuid()
+    };
+
+    let deploy = new module.deployUtilsClass(params);
+
+    var apiGateway = deploy._apiGateway;
+
+    expect(apiGateway).to.not.be.null;
+
+    expect(apiGateway.config.accessKeyId).to.equal(params.accessKey);
+    expect(apiGateway.config.region).to.equal(params.region);
+    expect(apiGateway.config.secretAccessKey).to.equal(params.secretKey);
+  });
+
   it('should default secretKey to empty string if no value provided', () => {
     let DeployUtils = new module.deployUtilsClass({});
 

@@ -32,8 +32,8 @@ class DeployUtils {
       });
 
     this._apiGateway = opts.apiGateway || new AWS.APIGateway({
-        accessKey: this._accessKey,
-        secretKey: this._secretKey,
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
         region: this._region
       });
   }
