@@ -103,6 +103,47 @@ class DeployUtils {
     });
   };
 
+  /**
+   * a Promise version of deployApiGatewayToSandbox, deployApiGatewayToProd, and deployApiGatewayToInt.
+   * @param {string} apiGatewayId
+   * @param {string} stageName
+   * @param {string} stageFullName
+   * @return {Promise<object>}
+     */
+  deployApiGatewayToStage(apiGatewayId, stageName, stageFullName){
+    if (util.isNullOrUndefined(apiGatewayId)){
+      return Promise.reject("apiGatewayId is null or undefined");
+    }
+
+    if (util.isNullOrUndefined(stageName)){
+      return Promise.reject("stageName is null or undefined");
+    }
+
+    if (util.isNullOrUndefined(stageFullName)){
+      return Promise.reject("stageFullName is null or undefined");
+    }
+
+    tsm.progressStart(`Deploying to '${stageFullName}' Environment`);
+
+    return new Promise((resolve, reject) => {
+      let params = {
+        restApiId: apiGatewayId, /* required */
+        stageName: stageName, /* required */
+        cacheClusterEnabled: false,
+        description: `${stageFullName} - ${moment.utc().format()}`,
+        stageDescription: `${stageFullName} - ${moment.utc().format()}`
+      };
+
+      this._apiGateway.createDeployment(params, function (err, data) {
+        if (err){
+          return reject(err);
+        }
+
+        return resolve(data);
+      });
+    });
+  }
+
   lookupApiGatewayByName(apiGatewayName, callback) {
 
     return new Promise((resolve, reject) => {
@@ -856,7 +897,7 @@ class DeployUtils {
    *
    * @param {string} apiGatewayId
    * @param {object} swaggerEntity
-   * @return {Promise} it's the response data promise from a request-promise
+   * @return {Promise<object>} the object will have the following:  id, name, createdDate
    * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
@@ -885,7 +926,8 @@ class DeployUtils {
    *
    * @param {object} swaggerEntity
    * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
-     */
+   * @return {Promise<object>} the object will have the following:  id, name, createdDate
+   */
   createSwagger(swaggerEntity, failOnWarnings = false) {
     tsm.progressStart(`overwriting swagger for [Swagger Title: ${swaggerEntity.info.title}]`);
 
@@ -935,6 +977,28 @@ class DeployUtils {
     }
 
     tsm.buildNumber(packageJson.version + pattern);
+  }
+
+  /**
+   *
+   * @param {string} environmentFullName should match integration, production, or sandbox
+   * @return {{FullName:, ShortName:, Host:}}
+   */
+  static getEnvironmentConstants(environmentFullName) {
+    switch (environmentFullName.toLocaleUpperCase()) {
+      case constants.env.INTEGRATION.FullName.toLocaleUpperCase():
+        return constants.env.INTEGRATION;
+      case constants.env.PRODUCTION.FullName.toLocaleUpperCase():
+        return constants.env.PRODUCTION;
+      case constants.env.SANDBOX.FullName.toLocaleUpperCase():
+        return constants.env.SANDBOX;
+      default:
+        return {
+          FullName: "UKN",
+          ShortName: "UKN",
+          Host: "UKN"
+        };
+    }
   }
 }
 

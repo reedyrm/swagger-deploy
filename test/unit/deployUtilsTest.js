@@ -6,7 +6,8 @@ let chai = require('chai'),
   chaiAsPromised = require('chai-as-promised'),
   uuid = require("node-uuid"),
   CloudFrontService = require('../../src/utils/cloudfrontService.js'),
-  module = require('../../src/index.js');
+  module = require('../../src/index.js'),
+  moment = require('moment');
 
 chai.use(chaiAsPromised);
 
@@ -483,17 +484,18 @@ describe('When accessing deployUtils class', function () {
       this.timeout(3000);
 
       var aws = {
-        putRestApi : () => {}
+        putRestApi: () => {
+        }
       };
 
       var expected = {
-        id : uuid(),
+        id: uuid(),
         name: uuid(),
         createdDate: new Date()
       };
 
       let putRestApiStub = sinon.stub(aws, "putRestApi", (opts, callback) => {
-          callback(null, expected);
+        callback(null, expected);
       });
 
       deployUtilOptions["apiGateway"] = aws;
@@ -526,7 +528,8 @@ describe('When accessing deployUtils class', function () {
       this.timeout(3000);
 
       var aws = {
-        putRestApi : () => {}
+        putRestApi: () => {
+        }
       };
 
       let putRestApiStub = sinon.stub(aws, "putRestApi", (opts, callback) => {
@@ -618,11 +621,26 @@ describe('When accessing deployUtils class', function () {
       });
     });
 
+    it.skip("create something", () => {
+      let dep = new module.deployUtilsClass({
+        accessKeyId: "AKIAIHKKPNB6CSBYJFTA",
+        secretKeyId: "c9bSHQsKDq1+yVKYS3NKpXXmDWMQBJcL6EpEPAoK",
+        region: "us-east-1"
+      });
+
+      dep.createSwagger(require("./../test-swagger.json")).then((data) => {
+        console.log(data);
+      }).catch((shit) => {
+        console.error(shit);
+      });
+    });
+
     it("should reject promise", (done) => {
       this.timeout(3000);
 
       var aws = {
-        importRestApi : () => {}
+        importRestApi: () => {
+        }
       };
 
       var expected = {
@@ -655,6 +673,192 @@ describe('When accessing deployUtils class', function () {
         expect(restApiStub.failOnWarnings).to.equal(false);
 
         done();
+      });
+    });
+  });
+
+  describe("and getting environment constants", () => {
+    it("and not main full name", () => {
+      let deployUtil = module.deployUtils;
+      var environmentConstants = deployUtil.getEnvironmentConstants(uuid());
+
+      var unknown = "UKN";
+      expect(environmentConstants.FullName).to.equal(unknown);
+      expect(environmentConstants.ShortName).to.equal(unknown);
+      expect(environmentConstants.Host).to.equal(unknown);
+    });
+
+    it("and integration", () => {
+      let deployUtil = module.deployUtils;
+      var environmentConstants = deployUtil.getEnvironmentConstants("integration");
+
+      expect(environmentConstants.FullName).to.equal(module.constants.env.INTEGRATION.FullName);
+      expect(environmentConstants.ShortName).to.equal(module.constants.env.INTEGRATION.ShortName);
+      expect(environmentConstants.Host).to.equal(module.constants.env.INTEGRATION.Host);
+    });
+
+    it("and production", () => {
+      let deployUtil = module.deployUtils;
+      var environmentConstants = deployUtil.getEnvironmentConstants("production");
+
+      expect(environmentConstants.FullName).to.equal(module.constants.env.PRODUCTION.FullName);
+      expect(environmentConstants.ShortName).to.equal(module.constants.env.PRODUCTION.ShortName);
+      expect(environmentConstants.Host).to.equal(module.constants.env.PRODUCTION.Host);
+    });
+
+    it("and sandbox", () => {
+      let deployUtil = module.deployUtils;
+      var environmentConstants = deployUtil.getEnvironmentConstants("sandbox");
+
+      expect(environmentConstants.FullName).to.equal(module.constants.env.SANDBOX.FullName);
+      expect(environmentConstants.ShortName).to.equal(module.constants.env.SANDBOX.ShortName);
+      expect(environmentConstants.Host).to.equal(module.constants.env.SANDBOX.Host);
+    });
+  });
+
+  describe("and deployToStagingEnvironment", () => {
+    describe("and no apiGatewayId", () => {
+      it("should reject", (done) => {
+        this.timeout(3000);
+
+        let deploy = new module.deployUtils({});
+        deploy.deployApiGatewayToStage(null, null, null).then()
+          .catch((error) => {
+            expect(error).to.equal("apiGatewayId is null or undefined");
+            done();
+          });
+      });
+    });
+
+    describe("and no stageName", () => {
+      it("should reject", (done) => {
+        this.timeout(3000);
+
+        let deploy = new module.deployUtils({});
+        deploy.deployApiGatewayToStage(uuid(), null, null).then()
+          .catch((error) => {
+            expect(error).to.equal("stageName is null or undefined");
+            done();
+          });
+      });
+    });
+
+    describe("and no stageFullName", () => {
+      it("should reject", (done) => {
+        this.timeout(3000);
+
+        let deploy = new module.deployUtils({});
+        deploy.deployApiGatewayToStage(uuid(), uuid(), null).then()
+          .catch((error) => {
+            expect(error).to.equal("stageFullName is null or undefined");
+            done();
+          });
+      });
+    });
+
+    describe("and deploying to stage", () => {
+      let deployUtilOptions, apiId, stageName, stageFullName, expectedParams;
+      let apiGatewayPropertyName = "apiGateway";
+
+      let assertOptions = (paramOptions, expectedParams) => {
+        expect(paramOptions.restApiId).to.equal(expectedParams.restApiId);
+        expect(paramOptions.stageName).to.equal(expectedParams.stageName);
+        expect(paramOptions.cacheClusterEnabled).to.equal(expectedParams.cacheClusterEnabled);
+        expect(paramOptions.description).to.equal(expectedParams.description);
+        expect(paramOptions.stageDescription).to.equal(expectedParams.stageDescription);
+      };
+
+      beforeEach(() => {
+        apiId = uuid();
+        stageName = uuid();
+        stageFullName = uuid();
+
+        deployUtilOptions = {
+          region: uuid(),
+          accessKey: uuid(),
+          secretKey: uuid()
+        };
+
+        expectedParams = {
+          restApiId: apiId,
+          stageName: stageName,
+          cacheClusterEnabled: false,
+          description: `${stageFullName} - ${moment.utc().format()}`,
+          stageDescription: `${stageFullName} - ${moment.utc().format()}`
+        }
+      });
+
+      afterEach(() => {
+        deployUtilOptions = null;
+        apiId = null;
+        stageName = null;
+        stageFullName = null;
+      });
+
+      describe("with success", () => {
+        it("it should do work", (done) => {
+          this.timeout(3000);
+
+          var aws = {
+            createDeployment: () => {
+            }
+          };
+
+          let createDeploymentStub = sinon.stub(aws, "createDeployment", (opts, callback) => {
+            callback(null, "Test");
+          });
+
+          deployUtilOptions[apiGatewayPropertyName] = aws;
+
+          let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+          deployUtils.deployApiGatewayToStage(apiId, stageName, stageFullName).then((data) => {
+            expect(data).to.equal("Test");
+
+            var paramOptions = createDeploymentStub.args[0][0];
+
+            assertOptions(paramOptions, expectedParams);
+
+            done();
+          }).catch((error) => {
+            console.error(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("with failure", () => {
+        it("it should do work", (done) => {
+          this.timeout(3000);
+
+          var aws = {
+            createDeployment: () => {
+            }
+          };
+
+          var result = "Test";
+
+          let createDeploymentStub = sinon.stub(aws, "createDeployment", (opts, callback) => {
+            callback(result, null);
+          });
+
+          deployUtilOptions[apiGatewayPropertyName] = aws;
+
+          let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+          deployUtils.deployApiGatewayToStage(apiId, stageName, stageFullName).then((data) => {
+            expect(data).to.be.null;
+
+            done();
+          }).catch((error) => {
+            var paramOptions = createDeploymentStub.args[0][0];
+
+            assertOptions(paramOptions, expectedParams);
+
+            console.error(error);
+            expect(error).to.equal(result);
+            done();
+          });
+        });
       });
     });
   });
