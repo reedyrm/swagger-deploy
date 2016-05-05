@@ -31,11 +31,18 @@ class DeployUtils {
         secretKey: this._secretKey
       });
 
-    this._apiGateway = opts.apiGateway || new AWS.APIGateway({
-        accessKeyId: this._accessKey,
-        secretAccessKey: this._secretKey,
-        region: this._region
-      });
+    let gatewayParams = {
+      accessKeyId: this._accessKey,
+      secretAccessKey: this._secretKey,
+      region: this._region,
+      sslEnabled: util.isNullOrUndefined(opts.sslEnabled) ? true : opts.sslEnabled
+    };
+
+    if (!util.isNullOrUndefined(opts.apiVersion)){
+      gatewayParams.apiVersion = opts.apiVersion;
+    }
+
+    this._apiGateway = opts.apiGateway || new AWS.APIGateway(gatewayParams);
   }
 
   deployApiGatewayToInt(apiGatewayId, callback) {
@@ -192,6 +199,14 @@ class DeployUtils {
     }).asCallback(callback);
   };
 
+  /**
+   *
+   * @param {string} stageName
+   * @param {string} restApiId
+   * @param {string} stageVariableName
+   * @param {string} stageVariableValue
+   * @param {function} callback
+   */
   createStageVariable(stageName, restApiId, stageVariableName, stageVariableValue, callback) {
     return new Promise((resolve, reject) => {
       tsm.progressStart(`Creating Stage Variable for '${stageName}' [Variable: ${stageVariableName}] [Value: ${stageVariableValue}]`);
@@ -228,6 +243,58 @@ class DeployUtils {
       });
     }).asCallback(callback);
   };
+
+  /**
+   * Uses the AWS apigateway's updateStage method to create / update stage variables.
+   * The variableCollection is required and it's object schema is {stageVariableName, stageVariableValue}
+   * @param {string} stageName
+   * @param {string} restApiId
+   * @param {Array<Object>} variableCollection {stageVariableName, stageVariableValue}
+   * @return {Promise<Object>|Promise}
+   */
+  createStageVariables(stageName, restApiId, variableCollection){
+    if (util.isNullOrUndefined(stageName) || stageName === ""){
+      return Promise.reject("stageName must be populated");
+    }
+
+    if (util.isNullOrUndefined(restApiId) || restApiId === ""){
+      return Promise.reject("restApiId must be populated");
+    }
+
+    if (util.isNullOrUndefined(variableCollection) || variableCollection.length === 0){
+      return Promise.reject("variableCollection must be populated");
+    }
+
+    return new Promise((resolve, reject) => {
+      tsm.progressStart(`Creating Stage Variables for '${stageName}'] [variableCollection: ${JSON.stringify(variableCollection)}]`);
+
+      let params = {
+        restApiId: restApiId,
+        stageName: stageName,
+        patchOperations: []
+      };
+
+      for (let i = 0; i < variableCollection.length; i++){
+        params.patchOperations.push({
+          op: 'replace',
+          path: `/variables/${variableCollection[i].stageVariableName}`,
+          value: variableCollection[i].stageVariableValue
+        });
+      }
+
+      return this._apiGateway.updateStage(params, function (err, data) {
+        if (err) {
+          let errorMessage = `Error: ${err} | Error Stack Trace: ${err.stack}`;
+          tsm.message({text: errorMessage});
+          reject(errorMessage);
+        } else {
+          tsm.message({text: `${JSON.stringify(data)}`});
+          tsm.progressFinish(`Creating Stage Variables for '${stageName}' [variableCollection: ${JSON.stringify(variableCollection)}]`);
+          resolve();
+        }
+      });
+    });
+  }
 
   findApiBasePathMapping(domainName, apiBasePathMappingName, callback) {
     tsm.progressStart(`Checking if API base path mapping exists. [Domain: ${domainName}] [ApiMappingName:  ${apiBasePathMappingName}]`);

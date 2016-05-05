@@ -35,6 +35,28 @@ describe('When accessing deployUtils class', function () {
 
   it("should assign properties to a new ApiGateway", () => {
     let params = {
+      apiVersion: '2015-07-09',
+      accessKey: uuid(),
+      secretKey: uuid(),
+      region: uuid(),
+      sslEnabled: false
+    };
+
+    let deploy = new module.deployUtilsClass(params);
+
+    var apiGateway = deploy._apiGateway;
+
+    expect(apiGateway).to.not.be.null;
+
+    expect(apiGateway.config.apiVersion).to.equal(params.apiVersion);
+    expect(apiGateway.config.accessKeyId).to.equal(params.accessKey);
+    expect(apiGateway.config.region).to.equal(params.region);
+    expect(apiGateway.config.secretAccessKey).to.equal(params.secretKey);
+    expect(apiGateway.config.sslEnabled).to.equal(params.sslEnabled);
+  });
+
+  it('sslEnabled should be true when nothing supplied', () => {
+    let params = {
       accessKey: uuid(),
       secretKey: uuid(),
       region: uuid()
@@ -46,9 +68,7 @@ describe('When accessing deployUtils class', function () {
 
     expect(apiGateway).to.not.be.null;
 
-    expect(apiGateway.config.accessKeyId).to.equal(params.accessKey);
-    expect(apiGateway.config.region).to.equal(params.region);
-    expect(apiGateway.config.secretAccessKey).to.equal(params.secretKey);
+    expect(apiGateway.config.sslEnabled).to.equal(true);
   });
 
   it('should default secretKey to empty string if no value provided', () => {
@@ -117,6 +137,212 @@ describe('When accessing deployUtils class', function () {
     let DeployUtils = new module.deployUtilsClass({});
 
     expect(DeployUtils.createStageVariable).to.be.a('function');
+  });
+
+  describe("and creating stage variables", () => {
+    let deployUtilOptions, apiId, stageName, stageFullName, expectedParams, deployUtils ;
+    let apiGatewayPropertyName = "apiGateway";
+
+    beforeEach(() => {
+      apiId = uuid();
+      stageName = uuid();
+      stageFullName = uuid();
+
+      deployUtilOptions = {
+        region: uuid(),
+        accessKey: uuid(),
+        secretKey: uuid()
+      };
+
+      expectedParams = {
+        restApiId: apiId,
+        stageName: stageName,
+        cacheClusterEnabled: false,
+        patchOperations: []
+      }
+    });
+
+    afterEach(() => {
+      deployUtilOptions = null;
+      apiId = null;
+      stageName = null;
+      stageFullName = null;
+      expectedParams = null;
+      deployUtils = null;
+    });
+
+    describe("and no stage name", () => {
+      it("and null, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables(null, null, null).catch((err) => {
+          expect(err).to.equal("stageName must be populated");
+          done();
+        });
+      });
+
+      it("and undefined, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables(undefined, null, null).catch((err) => {
+          expect(err).to.equal("stageName must be populated");
+          done();
+        });
+      });
+
+      it("and empty string, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables('', null, null).catch((err) => {
+          expect(err).to.equal("stageName must be populated");
+          done();
+        });
+      });
+    });
+
+    describe("and no rest api id", () => {
+      it("and null, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables(uuid(), null, null).catch((err) => {
+          expect(err).to.equal("restApiId must be populated");
+          done();
+        });
+      });
+
+      it("and undefined, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables(uuid(), undefined, null).catch((err) => {
+          expect(err).to.equal("restApiId must be populated");
+          done();
+        });
+      });
+
+      it("and empty string, should reject", (done) => {
+        deployUtils = new module.deployUtilsClass({});
+        deployUtils.createStageVariables(uuid(), '', null).catch((err) => {
+          expect(err).to.equal("restApiId must be populated");
+          done();
+        });
+      });
+    });
+
+    describe("and no stage variables", () => {
+      beforeEach(() => {
+        deployUtilOptions[apiGatewayPropertyName] = {
+          updateStage: () => {
+          }
+        };
+
+        deployUtils = new module.deployUtilsClass(deployUtilOptions);
+      });
+
+      describe("and null, undefined, or empty collection", () => {
+        it("and null, it should return reject", (done) => {
+          this.timeout(3000);
+
+          deployUtils.createStageVariables(uuid(), apiId, null).then((data) => {
+            expect(true).to.equal(false); //force this to blow up because it should be here
+            done();
+          }).catch((error) => {
+            expect(error).to.equal("variableCollection must be populated");
+
+            done();
+          });
+        });
+
+        it("and undefined, it should return reject", (done) => {
+          this.timeout(3000);
+
+          deployUtils.createStageVariables(uuid(), apiId, undefined).then((data) => {
+            expect(true).to.equal(false); //force this to blow up because it should be here
+            done();
+          }).catch((error) => {
+            expect(error).to.equal("variableCollection must be populated");
+
+            done();
+          });
+        });
+
+        it("and empty array, it should return reject", (done) => {
+          this.timeout(3000);
+
+          deployUtils.createStageVariables(uuid(), apiId, []).then((data) => {
+            expect(true).to.equal(false); //force this to blow up because it should be here
+            done();
+          }).catch((error) => {
+            expect(error).to.equal("variableCollection must be populated");
+
+            done();
+          });
+        });
+      });
+    });
+
+    describe("and stage variables populated", () => {
+      let variablesArray, updateStageStub;
+
+      beforeEach(() => {
+        variablesArray = [];
+        for (let q = 0; q < 3; q++) {
+          var variableItem = {
+            stageVariableName: uuid(),
+            stageVariableValue: `value${uuid()}`
+          };
+
+          variablesArray.push(variableItem);
+
+          var variableItemTransform = {
+            op: 'replace',
+            path: `/variables/${variableItem.stageVariableName}`,
+            value: variableItem.stageVariableValue
+          };
+
+          expectedParams.patchOperations.push(variableItemTransform);
+        }
+
+        let aws = {
+          updateStage: () => {
+          }
+        };
+
+        deployUtilOptions[apiGatewayPropertyName] = aws;
+
+        updateStageStub = sinon.stub(aws, "updateStage", (opts, callback) => {
+          callback(null, "Test");
+        });
+
+        deployUtils = new module.deployUtilsClass(deployUtilOptions);
+      });
+
+      afterEach(() => {
+        updateStageStub = null;
+        variablesArray = null;
+        expectedParams = null;
+      });
+
+      it("it should match expected params", (done) => {
+
+        var stageName = `stageName${uuid()}`;
+
+        deployUtils.createStageVariables(stageName, apiId, variablesArray).then((data)=> {
+
+          let actual = updateStageStub.args[0][0];
+
+          expect(actual.restApiId).to.equal(apiId);
+          expect(actual.stageName).to.equal(stageName);
+          expect(actual.patchOperations.length).to.equal(expectedParams.patchOperations.length);
+
+          for (let c = 0; c < expectedParams.patchOperations.length; c++) {
+            expect(expectedParams.patchOperations[c].op).to.equal(actual.patchOperations[c].op);
+            expect(expectedParams.patchOperations[c].path).to.equal(actual.patchOperations[c].path);
+            expect(expectedParams.patchOperations[c].value).to.equal(actual.patchOperations[c].value);
+          }
+
+          done();
+        }).catch((error)=> {
+          console.error(error);
+          expect(error).to.be.null;
+          done();
+        });
+      });
+    });
   });
 
   it('should have a function for findApiBasePathMapping', () => {
