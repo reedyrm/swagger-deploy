@@ -9,7 +9,8 @@ let chai = require('chai'),
   module = require('../../src/index.js'),
   moment = require('moment'),
   gulpUtil = require('gulp-util'),
-  util = require("util");
+  util = require("util"),
+  fileSystem = module.fileSystemPromise;
 
 chai.use(chaiAsPromised);
 
@@ -1450,5 +1451,124 @@ describe('When accessing deployUtils class', function () {
         });
       });
     });
-  })
+  });
+
+  describe("and scrubbing swagger for aws", () => {
+    describe("and no file path and name supplied", () => {
+      it("file null, should save no file", (done) => {
+        module.deployUtils.CreateAwsSwaggerFile(null, {}).catch((error)=> {
+          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+          expect(error.message).to.equal("filePathAndName is invalid: ''");
+          done();
+        });
+      });
+
+      it("file undefined, should save no file", (done) => {
+        module.deployUtils.CreateAwsSwaggerFile(undefined, {}).catch((error)=> {
+          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+          expect(error.message).to.equal("filePathAndName is invalid: ''");
+          done();
+        });
+      });
+
+      it("file empty string, should save no file", (done) => {
+        module.deployUtils.CreateAwsSwaggerFile('', {}).catch((error)=> {
+          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+          expect(error.message).to.equal('filePathAndName is invalid: \'""\'');
+          done();
+        });
+      });
+
+    });
+
+    describe("and invalid swagger supplied", () => {
+      it("entity null, should save no swagger file", (done) => {
+        module.deployUtils.CreateAwsSwaggerFile(uuid(), null).catch((error)=> {
+          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+          expect(error.message).to.equal("swaggerEntity is null or undefined");
+          done();
+        });
+      });
+
+      it("entity undefined, should save no swagger file", (done) => {
+        module.deployUtils.CreateAwsSwaggerFile(uuid(), undefined).catch((error)=> {
+          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+          expect(error.message).to.equal("swaggerEntity is null or undefined");
+          done();
+        });
+      });
+    });
+
+    describe("and valid path and file", () => {
+      var filePathAndName, fsp;
+
+      beforeEach(()=> {
+        filePathAndName = `./test/unit/${uuid()}.json`;
+        fsp = new fileSystem();
+      });
+
+      afterEach((done)=> {
+        fsp.deleteFileSystemObject(filePathAndName).then(()=> {
+          filePathAndName = null;
+          fsp = null;
+          done();
+        });
+      });
+
+      describe("swagger is contains schema type string with description nothing", () => {
+        it("it should replace it", (done) => {
+          module.deployUtils.CreateAwsSwaggerFile(filePathAndName, {
+            one: {
+              schema: {
+                type: "string",
+                description: "nothing"
+              }
+            }, two: {
+              schema: {
+                type: "string",
+                description: "nothing"
+              }
+            }
+          }).then(() => {
+            fsp.get(filePathAndName, false).then((data)=> {
+              expect(data.indexOf('"schema":{"type":"string","description":"nothing"')).to.equal(-1);
+
+              let resultsCount = data.match(/{"schema":{"\$ref":"#\/definitions\/StringResponse"}/g).length;
+              expect(resultsCount).to.equal(2);
+              done();
+            });
+          }).catch((error) => {
+            console.log(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("swagger is contains ,readonly: true", () => {
+        it("it should remove it", (done) => {
+          module.deployUtils.CreateAwsSwaggerFile(filePathAndName, {
+            one: {
+              aProp: "holla",
+              readOnly: true
+            }, two: {
+              aProp: "holla",
+              readOnly: true
+            }
+          }).then(() => {
+            fsp.get(filePathAndName, false).then((data)=> {
+              expect(data.indexOf('"readOnly":true')).to.equal(-1);
+
+              done();
+            });
+          }).catch((error) => {
+            console.log(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+    });
+
+  });
 });
