@@ -7,9 +7,15 @@ let chai = require('chai'),
   uuid = require("node-uuid"),
   CloudFrontService = require('../../src/utils/cloudfrontService.js'),
   module = require('../../src/index.js'),
-  moment = require('moment');
+  moment = require('moment'),
+  gulpUtil = require('gulp-util'),
+  util = require("util");
 
 chai.use(chaiAsPromised);
+
+let getRandomIntInclusive = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 describe('When accessing deployUtils class', function () {
   let sandbox;
@@ -140,7 +146,7 @@ describe('When accessing deployUtils class', function () {
   });
 
   describe("and creating stage variables", () => {
-    let deployUtilOptions, apiId, stageName, stageFullName, expectedParams, deployUtils ;
+    let deployUtilOptions, apiId, stageName, stageFullName, expectedParams, deployUtils;
     let apiGatewayPropertyName = "apiGateway";
 
     beforeEach(() => {
@@ -1106,4 +1112,343 @@ describe('When accessing deployUtils class', function () {
       });
     });
   });
+
+  describe("and deployApiGatewayToStageForEnvByGatewayName", function () {
+    this.timeout(3000);
+
+    describe("and environment invalid", function () {
+      let deployUtils, options;
+
+      let generateError = (value) => {
+        return new gulpUtil.PluginError({
+          plugin: 'deployApiGatewayToStageForEnvByGatewayName',
+          message: `environment is not valid [environment: ${module.deployUtils.getObjectAsString(value)}]`
+        });
+      };
+
+      beforeEach(()=> {
+        options = {};
+        deployUtils = new module.deployUtils(options);
+      });
+
+      afterEach(() => {
+        options = null;
+        deployUtils = null;
+      });
+
+      it("and environment null, it should reject", (done) => {
+        let environment = null;
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid()).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and environment undefined, it should reject", (done) => {
+        let environment = undefined;
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(undefined, uuid()).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and environment does not contain FullName, it should reject", (done) => {
+        let environment = {};
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid()).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and environment FullName is unknown, it should reject", (done) => {
+        let environment = {
+          FullName: "UNK"
+        };
+
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid()).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+
+      it("and environment does not contain ShortName, it should reject", (done) => {
+        let environment = {
+          FullName: uuid()
+        };
+
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid()).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and environment ShortName is unknown, it should reject", (done) => {
+        let environment = {
+          FullName: uuid(),
+          ShortName: "UNK"
+        };
+
+        let pluginError = generateError(environment);
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid()).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+    });
+
+    describe("and apiName invalid", function () {
+      let deployUtils, options, environment, pluginError;
+
+      beforeEach(()=> {
+        options = {};
+        environment = {
+          FullName: `FullName${uuid()}`,
+          ShortName: `ShortName${uuid()}`
+        };
+
+        pluginError = new gulpUtil.PluginError({
+          plugin: 'deployApiGatewayToStageForEnvByGatewayName',
+          message: 'apiName is null or undefined'
+        });
+
+        deployUtils = new module.deployUtils(options);
+      });
+
+      afterEach(() => {
+        options = null;
+        environment = null;
+        pluginError = null;
+        deployUtils = null;
+      });
+
+      it("and apiName null, it should reject", (done) => {
+        let apiName = null;
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, apiName).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and apiName undefined, it should reject", (done) => {
+        let apiName = undefined;
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, apiName).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+
+      it("and apiName empty string, it should reject", (done) => {
+        let apiName = '';
+
+        deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, apiName).then(()=> {
+          expect(true).to.equal(false);
+          done();
+        }).catch((error) => {
+          expect(error.plugin).to.equal(pluginError.plugin);
+          expect(error.message).to.equal(pluginError.message);
+          done();
+        });
+      });
+    });
+
+    describe("and all props valid", function () {
+      let aws, options, deployUtils, environment;
+
+      beforeEach(() => {
+        aws = {
+          getRestApis: () => {
+          },
+          createDeployment: () => {
+          }
+        };
+
+        environment = {
+          FullName: `FullName${uuid()}`,
+          ShortName: `ShortName${uuid()}`
+        };
+      });
+
+      afterEach(()=> {
+        aws = null;
+        environment = null;
+      });
+
+      describe("and api not found", function () {
+        beforeEach(() => {
+          sinon.stub(aws, "getRestApis", (opts, callback) => {
+            callback(null, {items: []});
+          });
+
+          options = {
+            apiGateway: aws
+          };
+
+          deployUtils = new module.deployUtils(options);
+        });
+
+        afterEach(()=> {
+          deployUtils = null;
+          options = null;
+        });
+
+        it("it should not continue", (done) => {
+          deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, uuid(), 20).then(()=> {
+            expect(true).to.equal(false);
+            done();
+          }).catch((error)=> {
+
+            expect(error.plugin).to.equal("deployApiGatewayToStageForEnvByGatewayName");
+            expect(error.message).to.equal("foundApiId is null or undefined (no match found)");
+
+            done();
+          });
+        });
+      });
+
+      describe("and api found with create deploy a success", function () {
+        let apiName, successResultFromCreateDeploy;
+
+        beforeEach(() => {
+          var id = getRandomIntInclusive(1, 999);
+          successResultFromCreateDeploy = "success";
+          apiName = `apiName ${uuid()}`;
+
+          sinon.stub(aws, "createDeployment", (opts, callback) => {
+            callback(null, successResultFromCreateDeploy);
+          });
+
+          sinon.stub(aws, "getRestApis", (opts, callback) => {
+            callback(null, {
+              items: [
+                {
+                  name: apiName,
+                  id: id
+                },
+                {
+                  name: uuid(),
+                  id: getRandomIntInclusive(id, id + 20) + 1
+                }
+              ]
+            });
+          });
+
+          options = {
+            apiGateway: aws
+          };
+
+          deployUtils = new module.deployUtils(options);
+        });
+
+        afterEach(()=> {
+          successResultFromCreateDeploy = null;
+          apiName = null;
+          deployUtils = null;
+          options = null;
+        });
+
+        it("it should deploy to staging", (done) => {
+          deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, apiName, 20).then((data)=> {
+            console.log(data);
+            expect(data).to.equal(successResultFromCreateDeploy);
+            done();
+          }).catch((err)=> {
+            console.error(err);
+            expect(err).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("and api found with create deploy a failure", function () {
+        let apiName, failureMessage;
+
+        beforeEach(() => {
+          var id = getRandomIntInclusive(1, 999);
+          apiName = `apiName ${uuid()}`;
+          failureMessage = "this is a failure";
+
+          sinon.stub(aws, "createDeployment", (opts, callback) => {
+              callback(failureMessage, null);
+          });
+
+          sinon.stub(aws, "getRestApis", (opts, callback) => {
+            callback(null, {
+              items: [
+                {
+                  name: apiName,
+                  id: id
+                },
+                {
+                  name: uuid(),
+                  id: getRandomIntInclusive(id, id + 20) + 1
+                }
+              ]
+            });
+          });
+
+          options = {
+            apiGateway: aws
+          };
+
+          deployUtils = new module.deployUtils(options);
+        });
+
+        afterEach(()=> {
+          failureMessage = null;
+          apiName = null;
+          deployUtils = null;
+          options = null;
+        });
+
+        it("it should deploy to staging", (done) => {
+          deployUtils.deployApiGatewayToStageForEnvByGatewayName(environment, apiName, 20).then(()=> {
+            expect(true).to.equal(false);
+            done();
+          }).catch((err)=> {
+            console.error(err);
+            expect(err.plugin).to.equal("deployApiGatewayToStageForEnvByGatewayName");
+            expect(err.message).to.equal(JSON.stringify(failureMessage));
+            done();
+          });
+        });
+      });
+    });
+  })
 });

@@ -116,7 +116,7 @@ class DeployUtils {
    * @param {string} stageName
    * @param {string} stageFullName
    * @return {Promise<object>}
-     */
+   */
   deployApiGatewayToStage(apiGatewayId, stageName, stageFullName){
     if (util.isNullOrUndefined(apiGatewayId)){
       return Promise.reject("apiGatewayId is null or undefined");
@@ -157,18 +157,9 @@ class DeployUtils {
       tsm.progressStart(`Checking if API Gateway exists. [ApiGatewayName: ${apiGatewayName}]`);
 
       try {
-        let apiGatewayParams = {
-          apiVersion: '2015-07-09',
-          accessKeyId: this._accessKey,
-          secretAccessKey: this._secretKey,
-          sslEnabled: true,
-          region: this._region
-        };
-
         let params = {};
 
-        let apigatewayClient = new AWS.APIGateway(apiGatewayParams);
-        apigatewayClient.getRestApis(params, function (err, data) {
+        this._apiGateway.getRestApis(params, (err, data) => {
           if (err) {
             let errorMessage = `Error: ${err}| Error Stack Trace: ${err.stack}`;
             tsm.message({text: errorMessage, status:'ERROR'});
@@ -330,7 +321,7 @@ class DeployUtils {
     });
   };
 
-  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes = [] ,callback) {
+  configureApiGatewaySettingsForInt(restApiId, whitelistedRoutes = [], callback) {
     let patchOps = [
       {
         op: 'replace',
@@ -1048,6 +1039,64 @@ class DeployUtils {
 
   /**
    *
+   * @param {Object} environment see src/constants
+   * @param {string} apiName
+   * @param {number} [delayInMilliseconds=16000] defaults to 16 seconds
+   * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
+   */
+  deployApiGatewayToStageForEnvByGatewayName(environment, apiName, delayInMilliseconds = 16000) {
+    let methodName = 'deployApiGatewayToStageForEnvByGatewayName';
+    let unknown = "UNK";
+
+    if (util.isNullOrUndefined(environment) ||
+      util.isNullOrUndefined(environment.FullName) ||
+      environment.FullName.toLocaleUpperCase() === unknown ||
+      util.isNullOrUndefined(environment.ShortName) ||
+      environment.ShortName.toLocaleUpperCase() === unknown) {
+
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: `environment is not valid [environment: ${DeployUtils.getObjectAsString(environment)}]`
+      }));
+    }
+
+    if (util.isNullOrUndefined(apiName) || apiName === '') {
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: 'apiName is null or undefined'
+      }));
+    }
+
+    return this.lookupApiGatewayByName(apiName).delay(delayInMilliseconds).then((foundApiId)=> {
+      console.log("foundApiId " + foundApiId);
+
+      if (util.isNullOrUndefined(foundApiId)) {
+        return Promise.reject(new gulpUtil.PluginError({
+          plugin: methodName,
+          message: "foundApiId is null or undefined (no match found)"
+        }));
+      }
+
+      return this.deployApiGatewayToStage(
+        foundApiId,
+        environment.ShortName,
+        environment.FullName).delay(delayInMilliseconds).then((data) => {
+        this.logMessage(`deployApiGatewayToStageForEnvByGatewayName was a success ${DeployUtils.getObjectAsString(data)}`);
+        return Promise.resolve(data);
+      }).catch((error) => {
+        return Promise.reject(new gulpUtil.PluginError({
+          plugin: methodName,
+          message: DeployUtils.getObjectAsString(error)
+        }));
+      });
+    }).catch((err)=> {
+      console.log(err);
+      return Promise.reject(err);
+    });
+  };
+
+  /**
+   *
    * @param {string} environmentFullName should match integration, production, or sandbox
    * @return {{FullName:, ShortName:, Host:}}
    */
@@ -1066,6 +1115,10 @@ class DeployUtils {
           Host: "UKN"
         };
     }
+  }
+
+  static getObjectAsString(entity) {
+    return util.isNullOrUndefined(entity) ? '' : JSON.stringify(entity)
   }
 }
 
