@@ -485,6 +485,13 @@ class DeployUtils {
 
   };
 
+  /**
+   * this method uses the jar files to promote the swagger document to the api reference
+   * @deprecated Please for api gateway and swagger upload, use @see {@link createSwagger} or @see {@link overwriteSwagger} methods
+   * @param apiGatewayName
+   * @param swaggerJsonPath
+   * @param callback
+     */
   createApiGateway(apiGatewayName, swaggerJsonPath, callback) {
     tsm.progressStart(`Creating API Gateway - ${apiGatewayName}`);
     let asoluteJsonPath = path.resolve(swaggerJsonPath);
@@ -533,6 +540,13 @@ class DeployUtils {
     });
   };
 
+  /**
+   * this method uses the jar files to promote the swagger document to the api reference
+   * @deprecated Please for api gateway and swagger upload, use @see {@link createSwagger} or @see {@link overwriteSwagger} methods
+   * @param apiGatewayId
+   * @param swaggerJsonPath
+   * @param callback
+     */
   updateAndDeployToIntStage(apiGatewayId, swaggerJsonPath, callback) {
     tsm.progressStart(`Updating API Gateway -  ${apiGatewayId}`);
     let asoluteJsonPath = path.resolve(swaggerJsonPath);
@@ -1024,7 +1038,7 @@ class DeployUtils {
 
   /**
    * append a build number pattern to the packageJson.version
-   * @param {object} packageJson
+   * @param {Object} packageJson
    * @param {string} [pattern='.{build.number}']
    */
   setBuildNumber(packageJson, pattern='.{build.number}'){
@@ -1039,7 +1053,7 @@ class DeployUtils {
 
   /**
    *
-   * @param {Object} environment see src/constants
+   * @param {Object} environment @see {@link ./src/constants}
    * @param {string} apiName
    * @param {number} [delayInMilliseconds=16000] defaults to 16 seconds
    * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
@@ -1068,14 +1082,14 @@ class DeployUtils {
     }
 
     return this.lookupApiGatewayByName(apiName).delay(delayInMilliseconds).then((foundApiId)=> {
-      console.log("foundApiId " + foundApiId);
-
       if (util.isNullOrUndefined(foundApiId)) {
         return Promise.reject(new gulpUtil.PluginError({
           plugin: methodName,
           message: "foundApiId is null or undefined (no match found)"
         }));
       }
+
+      this.logMessage(`Found the foundApid: ${foundApiId}`);
 
       return this.deployApiGatewayToStage(
         foundApiId,
@@ -1090,7 +1104,6 @@ class DeployUtils {
         }));
       });
     }).catch((err)=> {
-      console.log(err);
       return Promise.reject(err);
     });
   };
@@ -1117,6 +1130,11 @@ class DeployUtils {
     }
   }
 
+  /**
+   * a method to transform the entity into a string. If the entity is null or undefined, it will result in an empty string.
+   * @param entity
+   * @return {string}
+     */
   static getObjectAsString(entity) {
     return util.isNullOrUndefined(entity) ? '' : JSON.stringify(entity)
   }
