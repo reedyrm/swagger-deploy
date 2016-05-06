@@ -1110,6 +1110,50 @@ class DeployUtils {
   };
 
   /**
+   * Per AWS team, they have their own implementation of a swagger 2.0 validator. At the time of this writing, they will fail with the following:
+   * 1. readOnly: true
+   * 2. schema: { type: "string", description: "nothing"}
+   * Because of this, we remove them and create a file for later use. Note, this hack might go away if they ever implement this on their side.
+   * @param {string} filePathAndName
+   * @param {Object} swaggerEntity
+   * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
+   */
+  createAwsSwaggerFile(filePathAndName, swaggerEntity){
+    if (util.isNullOrUndefined(filePathAndName) || filePathAndName === ''){
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: "createAwsSwaggerFile",
+        message: `filePathAndName is invalid: '${DeployUtils.getObjectAsString(filePathAndName)}'`}));
+    }
+
+    if (util.isNullOrUndefined(swaggerEntity)){
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: "createAwsSwaggerFile",
+        message: 'swaggerEntity is null or undefined'}));
+    }
+
+    let fsp = new fileSystem();
+    let awsSwaggerString = JSON.stringify(swaggerEntity);
+
+    //point the schema to the StringResponse definition
+    awsSwaggerString = awsSwaggerString.replace(
+      new RegExp(
+        '"schema":{"type":"string","description":"nothing"}', 'g'),
+      '"schema":{"$ref": "#/definitions/StringResponse"}', 'g');
+
+    //remove the readOnly
+    awsSwaggerString = awsSwaggerString.replace(new RegExp(',"readOnly":true', 'g'), '');
+
+    return fsp.save(filePathAndName, JSON.parse(awsSwaggerString)).then((data) => {
+      return Promise.resolve(data);
+    }).catch((err) => {
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: "createAwsSwaggerFile",
+        message: DeployUtils.getObjectAsString(err)
+      }));
+    });
+  }
+
+  /**
    *
    * @param {string} environmentFullName should match integration, production, or sandbox
    * @return {{FullName:, ShortName:, Host:}}
@@ -1138,50 +1182,6 @@ class DeployUtils {
      */
   static getObjectAsString(entity) {
     return util.isNullOrUndefined(entity) ? '' : JSON.stringify(entity)
-  }
-
-  /**
-   * Per AWS team, they have their own implementation of a swagger 2.0 validator. At the time of this writing, they will fail with the following:
-   * 1. readOnly: true
-   * 2. schema: { type: "string", description: "nothing"}
-   * Because of this, we remove them and create a file for later use. Note, this hack might go away if they ever implement this on their side.
-   * @param {string} filePathAndName
-   * @param {Object} swaggerEntity
-   * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
-   */
-  static CreateAwsSwaggerFile(filePathAndName, swaggerEntity){
-    if (util.isNullOrUndefined(filePathAndName) || filePathAndName === ''){
-        return Promise.reject(new gulpUtil.PluginError({
-          plugin: "CreateAwsSwaggerFile",
-          message: `filePathAndName is invalid: '${DeployUtils.getObjectAsString(filePathAndName)}'`}));
-    }
-
-    if (util.isNullOrUndefined(swaggerEntity)){
-      return Promise.reject(new gulpUtil.PluginError({
-        plugin: "CreateAwsSwaggerFile",
-        message: 'swaggerEntity is null or undefined'}));
-    }
-
-    let fsp = new fileSystem();
-    let awsSwaggerString = JSON.stringify(swaggerEntity);
-
-    //point the schema to the StringResponse definition
-    awsSwaggerString = awsSwaggerString.replace(
-      new RegExp(
-        '"schema":{"type":"string","description":"nothing"}', 'g'),
-        '"schema":{"$ref": "#/definitions/StringResponse"}', 'g');
-
-    //remove the readOnly
-    awsSwaggerString = awsSwaggerString.replace(new RegExp(',"readOnly":true', 'g'), '');
-
-    return fsp.save(filePathAndName, JSON.parse(awsSwaggerString)).then((data) => {
-      return Promise.resolve(data);
-    }).catch((err) => {
-      return Promise.reject(new gulpUtil.PluginError({
-        plugin: "CreateAwsSwaggerFile",
-        message: DeployUtils.getObjectAsString(err)
-      }));
-    });
   }
 }
 

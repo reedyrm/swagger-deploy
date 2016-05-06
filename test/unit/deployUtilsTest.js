@@ -1456,24 +1456,27 @@ describe('When accessing deployUtils class', function () {
   describe("and scrubbing swagger for aws", () => {
     describe("and no file path and name supplied", () => {
       it("file null, should save no file", (done) => {
-        module.deployUtils.CreateAwsSwaggerFile(null, {}).catch((error)=> {
-          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+        var deploy = new module.deployUtils({});
+        deploy.createAwsSwaggerFile(null, {}).catch((error)=> {
+          expect(error.plugin).to.equal("createAwsSwaggerFile");
           expect(error.message).to.equal("filePathAndName is invalid: ''");
           done();
         });
       });
 
       it("file undefined, should save no file", (done) => {
-        module.deployUtils.CreateAwsSwaggerFile(undefined, {}).catch((error)=> {
-          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+        var deploy = new module.deployUtils({});
+        deploy.createAwsSwaggerFile(undefined, {}).catch((error)=> {
+          expect(error.plugin).to.equal("createAwsSwaggerFile");
           expect(error.message).to.equal("filePathAndName is invalid: ''");
           done();
         });
       });
 
       it("file empty string, should save no file", (done) => {
-        module.deployUtils.CreateAwsSwaggerFile('', {}).catch((error)=> {
-          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+        var deploy = new module.deployUtils({});
+        deploy.createAwsSwaggerFile('', {}).catch((error)=> {
+          expect(error.plugin).to.equal("createAwsSwaggerFile");
           expect(error.message).to.equal('filePathAndName is invalid: \'""\'');
           done();
         });
@@ -1483,16 +1486,18 @@ describe('When accessing deployUtils class', function () {
 
     describe("and invalid swagger supplied", () => {
       it("entity null, should save no swagger file", (done) => {
-        module.deployUtils.CreateAwsSwaggerFile(uuid(), null).catch((error)=> {
-          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+        var deploy = new module.deployUtils({});
+        deploy.createAwsSwaggerFile(uuid(), null).catch((error)=> {
+          expect(error.plugin).to.equal("createAwsSwaggerFile");
           expect(error.message).to.equal("swaggerEntity is null or undefined");
           done();
         });
       });
 
       it("entity undefined, should save no swagger file", (done) => {
-        module.deployUtils.CreateAwsSwaggerFile(uuid(), undefined).catch((error)=> {
-          expect(error.plugin).to.equal("CreateAwsSwaggerFile");
+        var deploy = new module.deployUtils({});
+        deploy.createAwsSwaggerFile(uuid(), undefined).catch((error)=> {
+          expect(error.plugin).to.equal("createAwsSwaggerFile");
           expect(error.message).to.equal("swaggerEntity is null or undefined");
           done();
         });
@@ -1517,7 +1522,8 @@ describe('When accessing deployUtils class', function () {
 
       describe("swagger is contains schema type string with description nothing", () => {
         it("it should replace it", (done) => {
-          module.deployUtils.CreateAwsSwaggerFile(filePathAndName, {
+          var deploy = new module.deployUtils({});
+          deploy.createAwsSwaggerFile(filePathAndName, {
             one: {
               schema: {
                 type: "string",
@@ -1547,7 +1553,8 @@ describe('When accessing deployUtils class', function () {
 
       describe("swagger is contains ,readonly: true", () => {
         it("it should remove it", (done) => {
-          module.deployUtils.CreateAwsSwaggerFile(filePathAndName, {
+          var deploy = new module.deployUtils({});
+          deploy.createAwsSwaggerFile(filePathAndName, {
             one: {
               aProp: "holla",
               readOnly: true
