@@ -930,7 +930,7 @@ describe('When accessing deployUtils class', function () {
 
   describe("and getting environment constants", () => {
     it("and not main full name", () => {
-      let deployUtil = module.deployUtils;
+      let deployUtil = new module.deployUtils({});
       var environmentConstants = deployUtil.getEnvironmentConstants(uuid());
 
       var unknown = "UKN";
@@ -940,7 +940,7 @@ describe('When accessing deployUtils class', function () {
     });
 
     it("and integration", () => {
-      let deployUtil = module.deployUtils;
+      let deployUtil = new module.deployUtils({});
       var environmentConstants = deployUtil.getEnvironmentConstants("integration");
 
       expect(environmentConstants.FullName).to.equal(module.constants.env.INTEGRATION.FullName);
@@ -949,7 +949,7 @@ describe('When accessing deployUtils class', function () {
     });
 
     it("and production", () => {
-      let deployUtil = module.deployUtils;
+      let deployUtil = new module.deployUtils({});
       var environmentConstants = deployUtil.getEnvironmentConstants("production");
 
       expect(environmentConstants.FullName).to.equal(module.constants.env.PRODUCTION.FullName);
@@ -958,7 +958,7 @@ describe('When accessing deployUtils class', function () {
     });
 
     it("and sandbox", () => {
-      let deployUtil = module.deployUtils;
+      let deployUtil = new module.deployUtils({});
       var environmentConstants = deployUtil.getEnvironmentConstants("sandbox");
 
       expect(environmentConstants.FullName).to.equal(module.constants.env.SANDBOX.FullName);
@@ -1123,7 +1123,7 @@ describe('When accessing deployUtils class', function () {
       let generateError = (value) => {
         return new gulpUtil.PluginError({
           plugin: 'deployApiGatewayToStageForEnvByGatewayName',
-          message: `environment is not valid [environment: ${module.deployUtils.getObjectAsString(value)}]`
+          message: `environment is not valid [environment: ${new module.deployUtils({}).getObjectAsString(value)}]`
         });
       };
 

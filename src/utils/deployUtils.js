@@ -1007,7 +1007,7 @@ class DeployUtils {
     if (util.isNullOrUndefined(apiName)) {
       return Promise.reject(new gulpUtil.PluginError({
         plugin: methodName,
-        message: `apiName is not valid [apiName: ${DeployUtils.getObjectAsString(apiName)}]`
+        message: `apiName is not valid [apiName: ${this.getObjectAsString(apiName)}]`
       }));
     }
 
@@ -1022,12 +1022,12 @@ class DeployUtils {
       this.logMessage(`Found the foundApid: ${foundApiId}`);
 
       return this.overwriteSwagger(foundApiId, swaggerEntity, failOnWarnings).delay(delayInMilliseconds).then((data) => {
-        tsm.progressFinish(`${methodName} was a success ${DeployUtils.getObjectAsString(data)}`);
+        tsm.progressFinish(`${methodName} was a success ${this.getObjectAsString(data)}`);
         return Promise.resolve(data);
       }).catch((error) => {
         return Promise.reject(new gulpUtil.PluginError({
           plugin: methodName,
-          message: DeployUtils.getObjectAsString(error)
+          message: this.getObjectAsString(error)
         }));
       });
     }).catch((err)=> {
@@ -1112,7 +1112,7 @@ class DeployUtils {
 
       return Promise.reject(new gulpUtil.PluginError({
         plugin: methodName,
-        message: `environment is not valid [environment: ${DeployUtils.getObjectAsString(environment)}]`
+        message: `environment is not valid [environment: ${this.getObjectAsString(environment)}]`
       }));
     }
 
@@ -1137,12 +1137,12 @@ class DeployUtils {
         foundApiId,
         environment.ShortName,
         environment.FullName).delay(delayInMilliseconds).then((data) => {
-        this.logMessage(`deployApiGatewayToStageForEnvByGatewayName was a success ${DeployUtils.getObjectAsString(data)}`);
+        this.logMessage(`deployApiGatewayToStageForEnvByGatewayName was a success ${this.getObjectAsString(data)}`);
         return Promise.resolve(data);
       }).catch((error) => {
         return Promise.reject(new gulpUtil.PluginError({
           plugin: methodName,
-          message: DeployUtils.getObjectAsString(error)
+          message: this.getObjectAsString(error)
         }));
       });
     }).catch((err)=> {
@@ -1163,7 +1163,7 @@ class DeployUtils {
     if (util.isNullOrUndefined(filePathAndName) || filePathAndName === ''){
       return Promise.reject(new gulpUtil.PluginError({
         plugin: "createAwsSwaggerFile",
-        message: `filePathAndName is invalid: '${DeployUtils.getObjectAsString(filePathAndName)}'`}));
+        message: `filePathAndName is invalid: '${this.getObjectAsString(filePathAndName)}'`}));
     }
 
     if (util.isNullOrUndefined(swaggerEntity)){
@@ -1199,7 +1199,7 @@ class DeployUtils {
    * @param {string} environmentFullName should match integration, production, or sandbox
    * @return {{FullName:, ShortName:, Host:}}
    */
-  static getEnvironmentConstants(environmentFullName) {
+  getEnvironmentConstants(environmentFullName) {
     switch (environmentFullName.toLocaleUpperCase()) {
       case constants.env.INTEGRATION.FullName.toLocaleUpperCase():
         return constants.env.INTEGRATION;
@@ -1221,7 +1221,7 @@ class DeployUtils {
    * @param entity
    * @return {string}
      */
-  static getObjectAsString(entity) {
+  getObjectAsString(entity) {
     return util.isNullOrUndefined(entity) ? '' : JSON.stringify(entity)
   }
 }
