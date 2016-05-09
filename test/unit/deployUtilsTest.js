@@ -1453,6 +1453,128 @@ describe('When accessing deployUtils class', function () {
     });
   });
 
+  describe("should overwriteSwaggerByName", function() {
+    this.timeout(3000);
+
+    let deployUtilOptions, apiId, apiName, aws, swagger;
+
+    beforeEach(() => {
+      apiName = `apiName ${uuid()}`;
+      apiId = getRandomIntInclusive(1, 999);
+      aws = {
+        getRestApis: () => {
+        },
+        putRestApi: () => {
+        }
+      };
+
+      deployUtilOptions = {
+        region: uuid(),
+        accessKey: uuid(),
+        secretKey: uuid()
+      };
+
+      swagger = {
+        info:{
+          title : apiName
+        }
+      }
+    });
+
+    afterEach(() => {
+      deployUtilOptions = null;
+      apiName = null;
+      aws = null;
+      swagger = null;
+      apiId = null;
+    });
+
+    it("should overwrite swagger", (done) => {
+      this.timeout(3000);
+
+      var expected = {
+        id: apiId,
+        name: apiName,
+        createdDate: new Date()
+      };
+
+      let putRestApiStub = sinon.stub(aws, "putRestApi", (opts, callback) => {
+        callback(null, expected);
+      });
+
+      sinon.stub(aws, "getRestApis", (opts, callback) => {
+        callback(null, {
+          items: [
+            {
+              name: apiName,
+              id: apiId
+            },
+            {
+              name: uuid(),
+              id: getRandomIntInclusive(apiId, apiId + 20) + 1
+            }
+          ]
+        });
+      });
+
+      deployUtilOptions["apiGateway"] = aws;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+
+      deployUtils.overwriteSwaggerByName(apiName, swagger, 20, false).then((data) => {
+
+        expect(data.id).to.equal(expected.id);
+        expect(data.name).to.equal(expected.name);
+        expect(data.createdDate).to.equal(expected.createdDate);
+
+        var restApiStub = putRestApiStub.args[0][0];
+        console.log(restApiStub);
+
+        expect(restApiStub.restApiId).to.equal(apiId);
+        expect(restApiStub.body).to.equal(JSON.stringify(swagger));
+
+        done();
+      }).catch((error)=> {
+        console.error(error);
+        expect(error).to.be.null;
+        done();
+      });
+    });
+
+    it("should reject promise", (done) => {
+      this.timeout(3000);
+
+      sinon.stub(aws, "getRestApis", (opts, callback) => {
+        callback(null, {
+          items: [
+            {
+              name: apiName + "1",
+              id: apiId
+            },
+            {
+              name: uuid(),
+              id: getRandomIntInclusive(apiId, apiId + 20) + 1
+            }
+          ]
+        });
+      });
+
+      deployUtilOptions["apiGateway"] = aws;
+
+      let deployUtils = new module.deployUtilsClass(deployUtilOptions);
+      deployUtils.overwriteSwaggerByName(apiName, swagger, 20, false).then((data) => {
+        // should never get here
+        expect(data).to.equal(true);
+        done();
+      }).catch((error) => {
+        console.log(error);
+
+        expect(error.message).to.equal("foundApiId is null or undefined (no match found)");
+        done();
+      });
+    });
+  });
+
   describe("and scrubbing swagger for aws", () => {
     describe("and no file path and name supplied", () => {
       it("file null, should save no file", (done) => {

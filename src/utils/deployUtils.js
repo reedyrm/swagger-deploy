@@ -177,7 +177,6 @@ class DeployUtils {
                 apiId = item.id;
               }
             }
-
             tsm.progressFinish(`Checking if API Gateway exists. [ApiGatewayName: ${apiGatewayName}]`);
             resolve(apiId);
           }
@@ -997,12 +996,53 @@ class DeployUtils {
 
   /**
    *
+   * @param {string} apiName
+   * @param {Object} swaggerEntity
+   * @param {number} [delayInMilliseconds=16000] this defaults to 16 seconds
+   * @param {boolean} [failOnWarnings=false]
+   * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
+   */
+  overwriteSwaggerByName(apiName, swaggerEntity, delayInMilliseconds = 16000, failOnWarnings = false) {
+    let methodName = 'overwriteSwaggerByName';
+    if (util.isNullOrUndefined(apiName)) {
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: `apiName is not valid [apiName: ${DeployUtils.getObjectAsString(apiName)}]`
+      }));
+    }
+
+    return this.lookupApiGatewayByName(apiName).delay(delayInMilliseconds).then((foundApiId)=> {
+      if (util.isNullOrUndefined(foundApiId)) {
+        return Promise.reject(new gulpUtil.PluginError({
+          plugin: methodName,
+          message: "foundApiId is null or undefined (no match found)"
+        }));
+      }
+
+      this.logMessage(`Found the foundApid: ${foundApiId}`);
+
+      return this.overwriteSwagger(foundApiId, swaggerEntity, failOnWarnings).delay(delayInMilliseconds).then((data) => {
+        tsm.progressFinish(`${methodName} was a success ${DeployUtils.getObjectAsString(data)}`);
+        return Promise.resolve(data);
+      }).catch((error) => {
+        return Promise.reject(new gulpUtil.PluginError({
+          plugin: methodName,
+          message: DeployUtils.getObjectAsString(error)
+        }));
+      });
+    }).catch((err)=> {
+      return Promise.reject(err);
+    });
+  }
+
+  /**
+   * Will stand up a new api gateway using the title within the swagger entity
    * @param {object} swaggerEntity
    * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
    * @return {Promise<object>} the object will have the following:  id, name, createdDate
    */
   createSwagger(swaggerEntity, failOnWarnings = false) {
-    tsm.progressStart(`overwriting swagger for [Swagger Title: ${swaggerEntity.info.title}]`);
+    tsm.progressStart(`createSwagger swagger for [Swagger Title: ${swaggerEntity.info.title}]`);
 
     var options = {
       body: JSON.stringify(swaggerEntity),
@@ -1015,6 +1055,7 @@ class DeployUtils {
           return reject(err);
         }
 
+        tsm.progressFinish(`createSwagger swagger for [Swagger Title: ${swaggerEntity.info.title}] completed`);
         return resolve(data);
       });
     });
