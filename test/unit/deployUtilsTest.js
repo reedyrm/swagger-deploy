@@ -1648,8 +1648,8 @@ describe('When accessing deployUtils class', function () {
           deploy.createAwsSwaggerFile(filePathAndName, {
             one: {
               schema: {
-                type: "string",
-                description: "nothing"
+                description: "nothing",
+                type: "string"
               }
             }, two: {
               schema: {
@@ -1683,8 +1683,8 @@ describe('When accessing deployUtils class', function () {
           deploy.createAwsSwaggerFile(filePathAndName, {
             one: {
               schema: {
-                type: "string",
-                description: "nothing"
+                description: "nothing",
+                type: "string"
               }
             },
             two: {
@@ -1732,8 +1732,8 @@ describe('When accessing deployUtils class', function () {
               }
             }, two: {
               schema: {
-                type: "boolean",
-                description: "Bool Result"
+                description: "Bool Result",
+                type: "boolean"
               }
             }
           }).then(() => {
@@ -1766,8 +1766,8 @@ describe('When accessing deployUtils class', function () {
             },
             two: {
               schema: {
-                type: "boolean",
-                description: "Bool Result"
+                description: "Bool Result",
+                type: "boolean"
               }
             },
             definitions:{

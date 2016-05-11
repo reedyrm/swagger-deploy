@@ -1188,10 +1188,20 @@ class DeployUtils {
         '"schema":{"type":"string","description":"nothing"}', 'g'),
       schemaStringResponseDefinition, 'g');
 
+    awsSwaggerString = awsSwaggerString.replace(
+      new RegExp(
+        '"schema":{"description":"nothing","type":"string"}', 'g'),
+      schemaStringResponseDefinition, 'g');
+
     //point the schema to the StringResponse definition
     awsSwaggerString = awsSwaggerString.replace(
       new RegExp(
         '"schema":{"type":"boolean","description":"Bool Result"}', 'g'),
+      schemaBoolResponseDefinition, 'g');
+
+    awsSwaggerString = awsSwaggerString.replace(
+      new RegExp(
+        '"schema":{"description":"Bool Result","type":"boolean"}', 'g'),
       schemaBoolResponseDefinition, 'g');
 
     //remove the readOnly
