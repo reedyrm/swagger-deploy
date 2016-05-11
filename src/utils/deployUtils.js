@@ -39,7 +39,7 @@ class DeployUtils {
       sslEnabled: util.isNullOrUndefined(opts.sslEnabled) ? true : opts.sslEnabled
     };
 
-    if (!util.isNullOrUndefined(opts.apiVersion)){
+    if (!util.isNullOrUndefined(opts.apiVersion)) {
       gatewayParams.apiVersion = opts.apiVersion;
     }
 
@@ -106,7 +106,7 @@ class DeployUtils {
         });
       }
       catch (err) {
-        tsm.message({text:`DeployApiGatewayToStage Error: ${err}`, status: 'ERROR'});
+        tsm.message({text: `DeployApiGatewayToStage Error: ${err}`, status: 'ERROR'});
       }
     });
   };
@@ -118,16 +118,16 @@ class DeployUtils {
    * @param {string} stageFullName
    * @return {Promise<object>}
    */
-  deployApiGatewayToStage(apiGatewayId, stageName, stageFullName){
-    if (util.isNullOrUndefined(apiGatewayId)){
+  deployApiGatewayToStage(apiGatewayId, stageName, stageFullName) {
+    if (util.isNullOrUndefined(apiGatewayId)) {
       return Promise.reject("apiGatewayId is null or undefined");
     }
 
-    if (util.isNullOrUndefined(stageName)){
+    if (util.isNullOrUndefined(stageName)) {
       return Promise.reject("stageName is null or undefined");
     }
 
-    if (util.isNullOrUndefined(stageFullName)){
+    if (util.isNullOrUndefined(stageFullName)) {
       return Promise.reject("stageFullName is null or undefined");
     }
 
@@ -143,7 +143,7 @@ class DeployUtils {
       };
 
       this._apiGateway.createDeployment(params, function (err, data) {
-        if (err){
+        if (err) {
           return reject(err);
         }
 
@@ -163,7 +163,7 @@ class DeployUtils {
         this._apiGateway.getRestApis(params, (err, data) => {
           if (err) {
             let errorMessage = `Error: ${err}| Error Stack Trace: ${err.stack}`;
-            tsm.message({text: errorMessage, status:'ERROR'});
+            tsm.message({text: errorMessage, status: 'ERROR'});
             reject(errorMessage);
           } // an error occurred
           else { // successful response
@@ -243,16 +243,16 @@ class DeployUtils {
    * @param {Array<Object>} variableCollection {stageVariableName, stageVariableValue}
    * @return {Promise<Object>|Promise}
    */
-  createStageVariables(stageName, restApiId, variableCollection){
-    if (util.isNullOrUndefined(stageName) || stageName === ""){
+  createStageVariables(stageName, restApiId, variableCollection) {
+    if (util.isNullOrUndefined(stageName) || stageName === "") {
       return Promise.reject("stageName must be populated");
     }
 
-    if (util.isNullOrUndefined(restApiId) || restApiId === ""){
+    if (util.isNullOrUndefined(restApiId) || restApiId === "") {
       return Promise.reject("restApiId must be populated");
     }
 
-    if (util.isNullOrUndefined(variableCollection) || variableCollection.length === 0){
+    if (util.isNullOrUndefined(variableCollection) || variableCollection.length === 0) {
       return Promise.reject("variableCollection must be populated");
     }
 
@@ -265,7 +265,7 @@ class DeployUtils {
         patchOperations: []
       };
 
-      for (let i = 0; i < variableCollection.length; i++){
+      for (let i = 0; i < variableCollection.length; i++) {
         params.patchOperations.push({
           op: 'replace',
           path: `/variables/${variableCollection[i].stageVariableName}`,
@@ -491,7 +491,7 @@ class DeployUtils {
    * @param apiGatewayName
    * @param swaggerJsonPath
    * @param callback
-     */
+   */
   createApiGateway(apiGatewayName, swaggerJsonPath, callback) {
     tsm.progressStart(`Creating API Gateway - ${apiGatewayName}`);
     let asoluteJsonPath = path.resolve(swaggerJsonPath);
@@ -546,7 +546,7 @@ class DeployUtils {
    * @param apiGatewayId
    * @param swaggerJsonPath
    * @param callback
-     */
+   */
   updateAndDeployToIntStage(apiGatewayId, swaggerJsonPath, callback) {
     tsm.progressStart(`Updating API Gateway -  ${apiGatewayId}`);
     let asoluteJsonPath = path.resolve(swaggerJsonPath);
@@ -707,15 +707,15 @@ class DeployUtils {
     console.log(`Retrieving CloudFront Distribution [CNAME: ${cname}]`);
 
     return this._cloudFrontService.getDistributionByCName(cname).then((distribution) => {
-        if (__.isEmpty(distribution)) {
-          throw new Error("Distribution not found!");
-        }
+      if (__.isEmpty(distribution)) {
+        throw new Error("Distribution not found!");
+      }
 
-        this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
-          if (err) console.log(err);
-          else console.log(data);
-        });
-      })
+      this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
+        if (err) console.log(err);
+        else console.log(data);
+      });
+    })
       .catch(err => {
         console.log(err);
         throw err;
@@ -824,15 +824,15 @@ class DeployUtils {
     console.log(`Retrieving CloudFront Distribution [CNAME: ${cname}]`);
 
     return this._cloudFrontService.getDistributionByCName(cname).then((distribution) => {
-        if (__.isEmpty(distribution)) {
-          throw new Error("Distribution not found!");
-        }
+      if (__.isEmpty(distribution)) {
+        throw new Error("Distribution not found!");
+      }
 
-        this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
-          if (err) console.log(err);
-          else console.log(data);
-        });
-      })
+      this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
+        if (err) console.log(err);
+        else console.log(data);
+      });
+    })
       .catch(err => {
         console.log(err);
         throw err;
@@ -940,15 +940,15 @@ class DeployUtils {
     console.log(`Retrieving CloudFront Distribution [CNAME: ${cname}]`);
 
     return this._cloudFrontService.getDistributionByCName(cname).then((distribution) => {
-        if (__.isEmpty(distribution)) {
-          throw new Error("Distribution not found!");
-        }
+      if (__.isEmpty(distribution)) {
+        throw new Error("Distribution not found!");
+      }
 
-        this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
-          if (err) console.log(err);
-          else console.log(data);
-        });
-      })
+      this._cloudFrontService.createOriginAndCacheBehavior(distribution, originDefintion, cacheBehaviorDefintion, function (err, data) {
+        if (err) console.log(err);
+        else console.log(data);
+      });
+    })
       .catch(err => {
         console.log(err);
         throw err;
@@ -973,7 +973,7 @@ class DeployUtils {
    * @param {boolean} [failOnWarnings=false] This is exposed, but from testing this doesn't work.
    * @throws {Promise<Error>} can throw an error if accessKey, secretKey, apiGatewayId, swaggerEntity, or date is null, undefined, or empty respectively.
    */
-  overwriteSwagger(apiGatewayId, swaggerEntity, failOnWarnings = false){
+  overwriteSwagger(apiGatewayId, swaggerEntity, failOnWarnings = false) {
     tsm.progressStart(`overwriting swagger for [ApiGatewayId: ${apiGatewayId}]`);
 
     var options = {
@@ -1066,8 +1066,8 @@ class DeployUtils {
    * @param {string} text
    * @param {string} [propertyValue=text]
    */
-  logMessage(text, propertyValue="text"){
-    if (tsm){
+  logMessage(text, propertyValue = "text") {
+    if (tsm) {
       var newVar = {};
       newVar[propertyValue] = text;
 
@@ -1083,8 +1083,8 @@ class DeployUtils {
    * @param {Object} packageJson
    * @param {string} [pattern='.{build.number}']
    */
-  setBuildNumber(packageJson, pattern='.{build.number}'){
-    if (util.isNullOrUndefined(packageJson)){
+  setBuildNumber(packageJson, pattern = '.{build.number}') {
+    if (util.isNullOrUndefined(packageJson)) {
       var error = new Error("Failure. packageJson is null or undefined");
       this.logMessage(error.message);
       throw error;
@@ -1154,37 +1154,75 @@ class DeployUtils {
    * Per AWS team, they have their own implementation of a swagger 2.0 validator. At the time of this writing, they will fail with the following:
    * 1. readOnly: true
    * 2. schema: { type: "string", description: "nothing"}
-   * Because of this, we remove them and create a file for later use. Note, this hack might go away if they ever implement this on their side.
+   * 3. schema: { type: "boolean", description: "Bool Result"}
+   * Because of this, we remove readonly, replace both simple schemas, and then add them to a definitions area if they are referenced.
+   * We then create a file for later use. Note, this hack might go away if they ever implement this on their side.
    * @param {string} filePathAndName
    * @param {Object} swaggerEntity
    * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
    */
-  createAwsSwaggerFile(filePathAndName, swaggerEntity){
-    if (util.isNullOrUndefined(filePathAndName) || filePathAndName === ''){
+  createAwsSwaggerFile(filePathAndName, swaggerEntity) {
+    if (util.isNullOrUndefined(filePathAndName) || filePathAndName === '') {
       return Promise.reject(new gulpUtil.PluginError({
         plugin: "createAwsSwaggerFile",
-        message: `filePathAndName is invalid: '${this.getObjectAsString(filePathAndName)}'`}));
+        message: `filePathAndName is invalid: '${this.getObjectAsString(filePathAndName)}'`
+      }));
     }
 
-    if (util.isNullOrUndefined(swaggerEntity)){
+    if (util.isNullOrUndefined(swaggerEntity)) {
       return Promise.reject(new gulpUtil.PluginError({
         plugin: "createAwsSwaggerFile",
-        message: 'swaggerEntity is null or undefined'}));
+        message: 'swaggerEntity is null or undefined'
+      }));
     }
 
     let fsp = new fileSystem();
     let awsSwaggerString = JSON.stringify(swaggerEntity);
 
+    let schemaStringResponseDefinition = '"schema":{"$ref": "#/definitions/StringResponse"}';
+    let schemaBoolResponseDefinition = '"schema":{"$ref": "#/definitions/BooleanResponse"}';
+
     //point the schema to the StringResponse definition
     awsSwaggerString = awsSwaggerString.replace(
       new RegExp(
         '"schema":{"type":"string","description":"nothing"}', 'g'),
-      '"schema":{"$ref": "#/definitions/StringResponse"}', 'g');
+      schemaStringResponseDefinition, 'g');
+
+    //point the schema to the StringResponse definition
+    awsSwaggerString = awsSwaggerString.replace(
+      new RegExp(
+        '"schema":{"type":"boolean","description":"Bool Result"}', 'g'),
+      schemaBoolResponseDefinition, 'g');
 
     //remove the readOnly
     awsSwaggerString = awsSwaggerString.replace(new RegExp(',"readOnly":true', 'g'), '');
 
-    return fsp.save(filePathAndName, JSON.parse(awsSwaggerString)).then((data) => {
+    let awsSwaggerEntity = JSON.parse(awsSwaggerString);
+
+    if (awsSwaggerString.indexOf(schemaStringResponseDefinition) !== -1 ||
+      awsSwaggerString.indexOf(schemaBoolResponseDefinition) !== -1) {
+      if (!awsSwaggerEntity.hasOwnProperty("definitions")) {
+        awsSwaggerEntity.definitions = {};
+      }
+
+      if (awsSwaggerString.indexOf(schemaStringResponseDefinition) !== -1 &&
+        !awsSwaggerEntity.definitions.hasOwnProperty("StringResponse")) {
+        awsSwaggerEntity.definitions.StringResponse = {
+          "type": "string",
+          "description": "nothing"
+        }
+      }
+
+      if (awsSwaggerString.indexOf(schemaBoolResponseDefinition) !== -1 &&
+        !awsSwaggerEntity.definitions.hasOwnProperty("BooleanResponse")) {
+        awsSwaggerEntity.definitions.BooleanResponse = {
+          "type": "boolean",
+          "description": "Bool Result"
+        }
+      }
+    }
+
+    return fsp.save(filePathAndName, awsSwaggerEntity).then((data) => {
       return Promise.resolve(data);
     }).catch((err) => {
       return Promise.reject(new gulpUtil.PluginError({
@@ -1220,7 +1258,7 @@ class DeployUtils {
    * a method to transform the entity into a string. If the entity is null or undefined, it will result in an empty string.
    * @param entity
    * @return {string}
-     */
+   */
   getObjectAsString(entity) {
     return util.isNullOrUndefined(entity) ? '' : JSON.stringify(entity)
   }

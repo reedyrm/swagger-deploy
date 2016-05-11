@@ -1643,7 +1643,7 @@ describe('When accessing deployUtils class', function () {
       });
 
       describe("swagger is contains schema type string with description nothing", () => {
-        it("it should replace it", (done) => {
+        it("it should replace it and create a definitions area", (done) => {
           var deploy = new module.deployUtils({});
           deploy.createAwsSwaggerFile(filePathAndName, {
             one: {
@@ -1663,6 +1663,129 @@ describe('When accessing deployUtils class', function () {
 
               let resultsCount = data.match(/{"schema":{"\$ref":"#\/definitions\/StringResponse"}/g).length;
               expect(resultsCount).to.equal(2);
+
+              let entity = JSON.parse(data);
+
+              expect(entity.definitions.StringResponse).with.property("type", "string");
+              expect(entity.definitions.StringResponse).with.property("description", "nothing");
+
+              done();
+            });
+          }).catch((error) => {
+            console.log(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+
+        it("it should replace it and not update the area", (done) => {
+          var deploy = new module.deployUtils({});
+          deploy.createAwsSwaggerFile(filePathAndName, {
+            one: {
+              schema: {
+                type: "string",
+                description: "nothing"
+              }
+            },
+            two: {
+              schema: {
+                type: "string",
+                description: "nothing"
+              }
+            },
+            definitions:{
+              StringResponse:{
+                type:"cookie",
+                description:"poodle"
+              }
+            }
+          }).then(() => {
+            fsp.get(filePathAndName, false).then((data)=> {
+              expect(data.indexOf('"schema":{"type":"string","description":"nothing"')).to.equal(-1);
+
+              let resultsCount = data.match(/{"schema":{"\$ref":"#\/definitions\/StringResponse"}/g).length;
+              expect(resultsCount).to.equal(2);
+
+              let entity = JSON.parse(data);
+
+              expect(entity.definitions.StringResponse).with.property("type", "cookie");
+              expect(entity.definitions.StringResponse).with.property("description", "poodle");
+
+              done();
+            });
+          }).catch((error) => {
+            console.log(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+      });
+
+      describe("swagger is contains schema type boolean with description bool result", () => {
+        it("it should replace it and create definitions", (done) => {
+          var deploy = new module.deployUtils({});
+          deploy.createAwsSwaggerFile(filePathAndName, {
+            one: {
+              schema: {
+                type: "boolean",
+                description: "Bool Result"
+              }
+            }, two: {
+              schema: {
+                type: "boolean",
+                description: "Bool Result"
+              }
+            }
+          }).then(() => {
+            fsp.get(filePathAndName, false).then((data)=> {
+              expect(data.indexOf('"schema":{"type":"boolean","description":"nothing"')).to.equal(-1);
+
+              let verifyReplaceMatch = data.match(/{"schema":{"\$ref":"#\/definitions\/BooleanResponse"}/g).length;
+              expect(verifyReplaceMatch).to.equal(2);
+
+              let entity = JSON.parse(data);
+              expect(entity.definitions.BooleanResponse).with.property("type", "boolean");
+              expect(entity.definitions.BooleanResponse).with.property("description", "Bool Result");
+              done();
+            });
+          }).catch((error) => {
+            console.log(error);
+            expect(error).to.be.null;
+            done();
+          });
+        });
+
+        it("it should replace it and not create definitions", (done) => {
+          var deploy = new module.deployUtils({});
+          deploy.createAwsSwaggerFile(filePathAndName, {
+            one: {
+              schema: {
+                type: "boolean",
+                description: "Bool Result"
+              }
+            },
+            two: {
+              schema: {
+                type: "boolean",
+                description: "Bool Result"
+              }
+            },
+            definitions:{
+              BooleanResponse:{
+                type:"cookie",
+                description:"poodle"
+              }
+            }
+          }).then(() => {
+            fsp.get(filePathAndName, false).then((data)=> {
+              expect(data.indexOf('"schema":{"type":"boolean","description":"nothing"')).to.equal(-1);
+
+              let verifyReplaceMatch = data.match(/{"schema":{"\$ref":"#\/definitions\/BooleanResponse"}/g).length;
+              expect(verifyReplaceMatch).to.equal(2);
+
+              let entity = JSON.parse(data);
+              expect(entity.definitions.BooleanResponse).with.property("type", "cookie");
+              expect(entity.definitions.BooleanResponse).with.property("description", "poodle");
               done();
             });
           }).catch((error) => {
@@ -1687,6 +1810,10 @@ describe('When accessing deployUtils class', function () {
           }).then(() => {
             fsp.get(filePathAndName, false).then((data)=> {
               expect(data.indexOf('"readOnly":true')).to.equal(-1);
+
+              let entity = JSON.parse(data);
+              expect(entity.definitions).to.equal(undefined);
+              expect(entity.definitions).to.equal(undefined);
 
               done();
             });
