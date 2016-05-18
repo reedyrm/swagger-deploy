@@ -1062,6 +1062,59 @@ class DeployUtils {
   };
 
   /**
+   * This will do the following: 1. lookup api by swagger title, 2. delay 3a. if api not found create the new api, 3b. if api found it will update it 4. delay again
+   * @param {Object} swaggerEntity Note: swaggerEntity must have valid info.title. Pulling from here because the is the aws importer strategy
+   * @param {number} [delayInMilliseconds=16000] this defaults to 16 seconds
+   * @param {boolean} [failOnWarnings=false]
+   * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
+   */
+  createOrOverwriteSwaggerByName(swaggerEntity, delayInMilliseconds = 16000, failOnWarnings = false){
+    let methodName = 'createOrOverwriteSwaggerByName';
+
+    if (util.isNullOrUndefined(swaggerEntity)){
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: `swaggerEntity is null or undefined [swaggerEntity: ${this.getObjectAsString(swaggerEntity)}]`
+      }));
+    }
+
+    if (!swaggerEntity.hasOwnProperty("info") || !swaggerEntity.info.hasOwnProperty("title")){
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: `swaggerEntity must contain info and title [swaggerEntity: ${this.getObjectAsString(swaggerEntity)}]`
+      }));
+    }
+
+    if (util.isNullOrUndefined(swaggerEntity.info.title) || swaggerEntity.info.title === ""){
+      return Promise.reject(new gulpUtil.PluginError({
+        plugin: methodName,
+        message: `swaggerEntity.info.title is null, undefined, or empty [swaggerEntity: ${this.getObjectAsString(swaggerEntity)}]`
+      }));
+    }
+
+    return this.lookupApiGatewayByName(swaggerEntity.info.title).delay(delayInMilliseconds).then((foundApiId)=> {
+      if (util.isNullOrUndefined(foundApiId)) {
+        this.logMessage(`${methodName}: creating api gateway`);
+        return this.createSwagger(swaggerEntity, failOnWarnings).delay(delayInMilliseconds);
+      }
+
+      this.logMessage(`${methodName}: Found the [foundApid: ${foundApiId}]`);
+
+      return this.overwriteSwagger(foundApiId, swaggerEntity, failOnWarnings).delay(delayInMilliseconds).then((data) => {
+        tsm.progressFinish(`${methodName} was a success ${this.getObjectAsString(data)}`);
+        return Promise.resolve(data);
+      }).catch((error) => {
+        return Promise.reject(new gulpUtil.PluginError({
+          plugin: methodName,
+          message: this.getObjectAsString(error)
+        }));
+      });
+    }).catch((err)=> {
+      return Promise.reject(err);
+    });
+  }
+
+  /**
    * This will write the text to teamcity by doing the following: "tsm.message({"text": text});" If tsm does not exist, it will log to the console doing following: "console.log(text)".
    * @param {string} text
    * @param {string} [propertyValue=text]
@@ -1097,7 +1150,7 @@ class DeployUtils {
    *
    * @param {Object} environment @see {@link ./src/constants}
    * @param {string} apiName
-   * @param {number} [delayInMilliseconds=16000] defaults to 16 seconds
+   * @param {number} [delayInMilliseconds=16000] this defaults to 16 seconds
    * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
    */
   deployApiGatewayToStageForEnvByGatewayName(environment, apiName, delayInMilliseconds = 16000) {
