@@ -1509,7 +1509,7 @@ describe('When accessing deployUtils class', function () {
     });
   });
 
-  describe("should createOrOverwriteSwaggerByName", function () {
+  describe("should createOrOverwriteApiSwagger", function () {
     this.timeout(3000);
 
     let expected, deployUtilOptions, apiId, apiName, aws, swagger;
@@ -1544,7 +1544,7 @@ describe('When accessing deployUtils class', function () {
       describe("and is undefined", ()=> {
         it("should fail ", ()=> {
           let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-          return deployUtils.createOrOverwriteSwaggerByName(undefined).catch((error)=> {
+          return deployUtils.createOrOverwriteApiSwagger(undefined).catch((error)=> {
             expect(error.message).to.equal("swaggerEntity is null or undefined [swaggerEntity: ]");
           });
         });
@@ -1553,7 +1553,7 @@ describe('When accessing deployUtils class', function () {
       describe("and is null", ()=> {
         it("should fail ", ()=> {
           let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-          return deployUtils.createOrOverwriteSwaggerByName(null).catch((error)=> {
+          return deployUtils.createOrOverwriteApiSwagger(null).catch((error)=> {
             expect(error.message).to.equal("swaggerEntity is null or undefined [swaggerEntity: ]");
           });
         });
@@ -1562,7 +1562,7 @@ describe('When accessing deployUtils class', function () {
       describe("and does not contain info", ()=> {
         it("should fail ", ()=> {
           let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-          return deployUtils.createOrOverwriteSwaggerByName({}).catch((error)=> {
+          return deployUtils.createOrOverwriteApiSwagger({}).catch((error)=> {
             expect(error.message).to.equal("swaggerEntity must contain info and title [swaggerEntity: {}]");
           });
         });
@@ -1572,7 +1572,7 @@ describe('When accessing deployUtils class', function () {
         describe("and title property does not exist", ()=> {
           it("should fail ", ()=> {
             let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-            return deployUtils.createOrOverwriteSwaggerByName({info: {}}).catch((error)=> {
+            return deployUtils.createOrOverwriteApiSwagger({info: {}}).catch((error)=> {
               expect(error.message).to.equal("swaggerEntity must contain info and title [swaggerEntity: {\"info\":{}}]");
             });
           });
@@ -1582,7 +1582,7 @@ describe('When accessing deployUtils class', function () {
               it("should fail ", ()=> {
                 let swaggerEntity = {info: {title: undefined}};
                 let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-                return deployUtils.createOrOverwriteSwaggerByName(swaggerEntity)
+                return deployUtils.createOrOverwriteApiSwagger(swaggerEntity)
                   .catch((error)=> {
                     expect(error.message).to.equal(`swaggerEntity.info.title is null, undefined, or empty [swaggerEntity: ${JSON.stringify(swaggerEntity)}]`);
                   });
@@ -1593,7 +1593,7 @@ describe('When accessing deployUtils class', function () {
               it("should fail ", ()=> {
                 let deployUtils = new module.deployUtilsClass(deployUtilOptions);
                 let swaggerEntity = {info: {title: undefined}};
-                return deployUtils.createOrOverwriteSwaggerByName(swaggerEntity)
+                return deployUtils.createOrOverwriteApiSwagger(swaggerEntity)
                   .catch((error)=> {
                     expect(error.message).to.equal(`swaggerEntity.info.title is null, undefined, or empty [swaggerEntity: ${JSON.stringify(swaggerEntity)}]`);
                   });
@@ -1603,7 +1603,7 @@ describe('When accessing deployUtils class', function () {
               it("should fail ", ()=> {
                 let deployUtils = new module.deployUtilsClass(deployUtilOptions);
                 let swaggerEntity = {info: {title: null}};
-                return deployUtils.createOrOverwriteSwaggerByName(swaggerEntity)
+                return deployUtils.createOrOverwriteApiSwagger(swaggerEntity)
                   .catch((error)=> {
                     expect(error.message).to.equal(`swaggerEntity.info.title is null, undefined, or empty [swaggerEntity: ${JSON.stringify(swaggerEntity)}]`);
                   });
@@ -1613,7 +1613,7 @@ describe('When accessing deployUtils class', function () {
               it("should fail ", ()=> {
                 let deployUtils = new module.deployUtilsClass(deployUtilOptions);
                 let swaggerEntity = {info: {title: ""}};
-                return deployUtils.createOrOverwriteSwaggerByName(swaggerEntity)
+                return deployUtils.createOrOverwriteApiSwagger(swaggerEntity)
                   .catch((error)=> {
                     expect(error.message).to.equal(`swaggerEntity.info.title is null, undefined, or empty [swaggerEntity: ${JSON.stringify(swaggerEntity)}]`);
                   });
@@ -1660,7 +1660,7 @@ describe('When accessing deployUtils class', function () {
 
             let deployUtils = new module.deployUtilsClass(deployUtilOptions);
 
-            return deployUtils.createOrOverwriteSwaggerByName(swagger, 20, false).then((data) => {
+            return deployUtils.createOrOverwriteApiSwagger(swagger, 20, false).then((data) => {
 
               expect(data.id).to.equal(expected.id);
               expect(data.name).to.equal(expected.name);
@@ -1718,7 +1718,7 @@ describe('When accessing deployUtils class', function () {
             deployUtilOptions["apiGateway"] = aws;
 
             let deployUtils = new module.deployUtilsClass(deployUtilOptions);
-            return deployUtils.createOrOverwriteSwaggerByName(swagger, 20, false).then((data) => {
+            return deployUtils.createOrOverwriteApiSwagger(swagger, 20, false).then((data) => {
               // should never get here
               expect(data).to.equal(expected);
             }).catch((error) => {

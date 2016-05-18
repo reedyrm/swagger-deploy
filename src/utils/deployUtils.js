@@ -1068,8 +1068,8 @@ class DeployUtils {
    * @param {boolean} [failOnWarnings=false]
    * @return {Promise<Object>|Promise<gulpUtil.PluginError>}
    */
-  createOrOverwriteSwaggerByName(swaggerEntity, delayInMilliseconds = 16000, failOnWarnings = false){
-    let methodName = 'createOrOverwriteSwaggerByName';
+  createOrOverwriteApiSwagger(swaggerEntity, delayInMilliseconds = 16000, failOnWarnings = false){
+    let methodName = 'createOrOverwriteApiSwagger';
 
     if (util.isNullOrUndefined(swaggerEntity)){
       return Promise.reject(new gulpUtil.PluginError({
