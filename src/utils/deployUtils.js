@@ -339,7 +339,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes, callback);
+    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, patchOps, callback);
   };
@@ -362,7 +362,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes, callback);
+    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
@@ -385,12 +385,12 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes, callback);
+    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
-  _updatePatchSettings(patchOps, blacklistedRoutes, callback){
+  _updatePatchSettings(patchOps, blacklistedRoutes){
     let apiGatewayParams = {
       apiVersion: '2015-07-09',
       accessKeyId: this._accessKey,
@@ -447,7 +447,7 @@ class DeployUtils {
         }
       }
       return patchOps;
-    }).asCallback(callback);
+    });
   };
 
   _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
