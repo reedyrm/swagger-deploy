@@ -340,7 +340,7 @@ class DeployUtils {
       }];
 
     tsm.message({text: "Update Patch Settings"});
-    return this._updatePatchSettings(patchOps, blacklistedRoutes).then((updatePatchOps)=> {
+    return this._updatePatchSettings(patchOps, restApiId, blacklistedRoutes).then((updatePatchOps)=> {
       tsm.message({text: "Pass the Updated operations on!"});
       return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, updatePatchOps, callback);
     });
@@ -392,7 +392,7 @@ class DeployUtils {
     return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
-  _updatePatchSettings(patchOps, blacklistedRoutes){
+  _updatePatchSettings(patchOps, restApiId, blacklistedRoutes){
     return new Promise((resolve, reject) => {
       let apiGatewayParams = {
         apiVersion: '2015-07-09',
@@ -402,11 +402,15 @@ class DeployUtils {
         region: this._region
       };
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let params = {
+        restApiId: restApiId
+      };
       let resources = [];
       tsm.message({text: "Get Resources"});
       apiGateway.getResources(params, function (err, data) {
         if (err) {
           tsm.message({text: err});
+          tsm.message({text: err.stack});
           reject({message: err});
         } else {
           for (let index = 0; index < data.items.length; index++) {
