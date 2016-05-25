@@ -341,7 +341,6 @@ class DeployUtils {
 
     tsm.message({text: "Update Patch Settings"});
     return this._updatePatchSettings(patchOps, restApiId, blacklistedRoutes).then((updatePatchOps)=> {
-      tsm.message({text: "Pass the Updated operations on!"});
       return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, updatePatchOps, callback);
     });
   };
@@ -364,9 +363,9 @@ class DeployUtils {
         value: 'false'
       }];
 
-    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
-
-    return this._configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
+    return this._updatePatchSettings(patchOps, restApiId, blacklistedRoutes).then((updatePatchOps)=> {
+      return this._configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, updatePatchOps, callback);
+    });
   };
 
   configureApiGatewaySettingsForProd(restApiId, blacklistedRoutes = [], callback) {
@@ -387,9 +386,9 @@ class DeployUtils {
         value: 'false'
       }];
 
-    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
-
-    return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
+    return this._updatePatchSettings(patchOps, restApiId, blacklistedRoutes).then((updatePatchOps)=> {
+      return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, updatePatchOps, callback);
+    });
   };
 
   _updatePatchSettings(patchOps, restApiId, blacklistedRoutes){
