@@ -339,7 +339,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
+    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, patchOps, callback);
   };
@@ -362,7 +362,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
+    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.SANDBOX.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
@@ -385,7 +385,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
+    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
 
     return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
