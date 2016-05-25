@@ -4,8 +4,8 @@ describe('Should Grab Routes from Gateway', function () {
   xit('hope it works', (done) => {
     let apiGatewayParams = {
       apiVersion: '2015-07-09',
-      accessKeyId: 'AKIAJ5LUD7WR6HRT6VYQ',
-      secretAccessKey: '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',
+      accessKeyId: '***',
+      secretAccessKey: '***',
       sslEnabled: true,
       region: 'us-east-1'
     };
@@ -44,7 +44,7 @@ describe('Should Grab Routes from Gateway', function () {
         // let blacklistedRoutes = [];
 
         resources = resources.filter(function(x) { return blacklistedRoutes.indexOf(x) < 0 });
-        
+
         console.log('Update Blacklist Routes: ' + JSON.stringify(resources));
         let updateStageParams = {
           restApiId: 'ypisctp73i',
