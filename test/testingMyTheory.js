@@ -1,11 +1,11 @@
 let AWS = require('aws-sdk'),
   expect = require('chai').expect;
 describe('Should Grab Routes from Gateway', function () {
-  xit('hope it works', (done) => {
+  it('hope it works', (done) => {
     let apiGatewayParams = {
       apiVersion: '2015-07-09',
-      accessKeyId: '***',
-      secretAccessKey: '***',
+      accessKeyId: 'AKIAI3TAQBRDADN5RLFQ',
+      secretAccessKey: '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',
       sslEnabled: true,
       region: 'us-east-1'
     };
