@@ -339,7 +339,7 @@ class DeployUtils {
         value: 'false'
       }];
 
-    return this._updatePatchSettings(patchOps, blacklistedRoutes).then((updatePatchOps)=> {
+    return this._updatePatchSettings(patchOps, blacklistedRoutes, callback).then((updatePatchOps)=> {
       return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, updatePatchOps, callback);
     });
   };
