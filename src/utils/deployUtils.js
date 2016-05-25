@@ -339,7 +339,9 @@ class DeployUtils {
         value: 'false'
       }];
 
+    tsm.message({text: "Update Patch Settings"});
     return this._updatePatchSettings(patchOps, blacklistedRoutes).then((updatePatchOps)=> {
+      tsm.message({text: "Pass the Updated operations on!"});
       return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, updatePatchOps, callback);
     });
   };
@@ -401,6 +403,7 @@ class DeployUtils {
       };
       let apiGateway = new AWS.APIGateway(apiGatewayParams);
       let resources = [];
+      tsm.message({text: "Get Resources"});
       apiGateway.getResources(params, function (err, data) {
         if (err) {
           tsm.message({text: err});
@@ -426,6 +429,7 @@ class DeployUtils {
             }
           }
 
+          tsm.message({text: "Remove Black list"});
           // Remove all the routes in the black list!
           resources = resources.filter(function (x) {
             return blacklistedRoutes.indexOf(x) < 0
@@ -448,6 +452,7 @@ class DeployUtils {
             });
           }
         }
+        tsm.message({text: "Patch Settings Successfully Updated"});
         resolve(patchOps);
       });
     });
