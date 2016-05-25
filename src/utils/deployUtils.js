@@ -339,9 +339,9 @@ class DeployUtils {
         value: 'false'
       }];
 
-    // patchOps = this._updatePatchSettings(patchOps, blacklistedRoutes);
-
-    return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, patchOps, callback);
+    return this._updatePatchSettings(patchOps, blacklistedRoutes).then((updatePatchOps)=> {
+      return this._configureApiGatewaySettingsForEnv(constants.env.INTEGRATION.ShortName.toLowerCase(), restApiId, updatePatchOps, callback);
+    });
   };
 
   configureApiGatewaySettingsForSandbox(restApiId, blacklistedRoutes = [], callback) {
@@ -390,64 +390,67 @@ class DeployUtils {
     return this._configureApiGatewaySettingsForEnv(constants.env.PRODUCTION.ShortName.toLocaleLowerCase(), restApiId, patchOps, callback);
   };
 
-  _updatePatchSettings(patchOps, blacklistedRoutes){
-    let apiGatewayParams = {
-      apiVersion: '2015-07-09',
-      accessKeyId: this._accessKey,
-      secretAccessKey: this._secretKey,
-      sslEnabled: true,
-      region: this._region
-    };
-    let apiGateway = new AWS.APIGateway(apiGatewayParams);
-    let resources = [];
-    apiGateway.getResources(params, function (err, data) {
-      if (err) {
-        tsm.message({text: err});
-      } else {
-        for (let index = 0; index < data.items.length; index++) {
-          if (data.items[index].hasOwnProperty('resourceMethods')) {
-            if (JSON.stringify(data.items[index].resourceMethods).indexOf("GET")) {
-              resources.push(`${data.items[index].path}/GET`);
-            }
+  _updatePatchSettings(patchOps, blacklistedRoutes, callback){
+    return new Promise((resolve, reject) => {
+      let apiGatewayParams = {
+        apiVersion: '2015-07-09',
+        accessKeyId: this._accessKey,
+        secretAccessKey: this._secretKey,
+        sslEnabled: true,
+        region: this._region
+      };
+      let apiGateway = new AWS.APIGateway(apiGatewayParams);
+      let resources = [];
+      apiGateway.getResources(params, function (err, data) {
+        if (err) {
+          tsm.message({text: err});
+          reject({message: err});
+        } else {
+          for (let index = 0; index < data.items.length; index++) {
+            if (data.items[index].hasOwnProperty('resourceMethods')) {
+              if (JSON.stringify(data.items[index].resourceMethods).indexOf("GET")) {
+                resources.push(`${data.items[index].path}/GET`);
+              }
 
-            if (JSON.stringify(data.items[index].resourceMethods).indexOf("POST")) {
-              resources.push(`${data.items[index].path}/POST`);
-            }
+              if (JSON.stringify(data.items[index].resourceMethods).indexOf("POST")) {
+                resources.push(`${data.items[index].path}/POST`);
+              }
 
-            if (JSON.stringify(data.items[index].resourceMethods).indexOf("PUT")) {
-              resources.push(`${data.items[index].path}/PUT`);
-            }
+              if (JSON.stringify(data.items[index].resourceMethods).indexOf("PUT")) {
+                resources.push(`${data.items[index].path}/PUT`);
+              }
 
-            if (JSON.stringify(data.items[index].resourceMethods).indexOf("DELETE")) {
-              resources.push(`${data.items[index].path}/DELETE`);
+              if (JSON.stringify(data.items[index].resourceMethods).indexOf("DELETE")) {
+                resources.push(`${data.items[index].path}/DELETE`);
+              }
             }
           }
-        }
 
-        // Remove all the routes in the black list!
-        resources = resources.filter(function(x) {
-          return blacklistedRoutes.indexOf(x) < 0
-        });
-
-        for (let index = 0; index < resources.length; index++) {
-          patchOps.push({
-            op: 'replace',
-            path: `${resources[index]}/logging/loglevel`,
-            value: 'INFO'
-          }, {
-            op: 'replace',
-            path: `${resources[index]}/metrics/enabled`,
-            value: 'true'
-          }, {
-            op: 'replace',
-            path: `${resources[index]}/logging/dataTrace`,
-            value: 'true',
-            from: 'false'
+          // Remove all the routes in the black list!
+          resources = resources.filter(function (x) {
+            return blacklistedRoutes.indexOf(x) < 0
           });
+
+          for (let index = 0; index < resources.length; index++) {
+            patchOps.push({
+              op: 'replace',
+              path: `${resources[index]}/logging/loglevel`,
+              value: 'INFO'
+            }, {
+              op: 'replace',
+              path: `${resources[index]}/metrics/enabled`,
+              value: 'true'
+            }, {
+              op: 'replace',
+              path: `${resources[index]}/logging/dataTrace`,
+              value: 'true',
+              from: 'false'
+            });
+          }
         }
-      }
-      return patchOps;
-    });
+        resolve(patchOps);
+      });
+    }).asCallback(callback);
   };
 
   _configureApiGatewaySettingsForEnv(stageName, restApiId, patchOps, callback) {
