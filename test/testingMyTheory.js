@@ -5,7 +5,7 @@ describe('Should Grab Routes from Gateway', function () {
     let apiGatewayParams = {
       apiVersion: '2015-07-09',
       accessKeyId: '**',
-      secretAccessKey: ***',
+      secretAccessKey: '***',
       sslEnabled: true,
       region: 'us-east-1'
     };
