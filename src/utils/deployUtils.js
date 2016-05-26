@@ -441,30 +441,13 @@ class DeployUtils {
           for (let index = 0; index < resources.length; index++) {
             patchOps.push({
               op: 'replace',
-              path: `${resources[index]}/logging/loglevel`,
-              value: 'INFO'
-            }, {
-              op: 'replace',
-              path: `${resources[index]}/metrics/enabled`,
-              value: 'true'
-            }, {
-              op: 'replace',
               path: `${resources[index]}/logging/dataTrace`,
-              value: 'true',
-              from: 'false'
+              value: 'true'
             });
           }
           for (let index = 0; index < blacklistedRoutes.length; index++) {
             tsm.message({text: `Turn off Logging for ${blacklistedRoutes[index]}`});
             patchOps.push({
-              op: 'replace',
-              path: `${blacklistedRoutes[index]}/logging/loglevel`,
-              value: 'INFO'
-            }, {
-              op: 'replace',
-              path: `${blacklistedRoutes[index]}/metrics/enabled`,
-              value: 'true'
-            }, {
               op: 'replace',
               path: `${blacklistedRoutes[index]}/logging/dataTrace`,
               value: 'false'
