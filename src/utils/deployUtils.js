@@ -432,7 +432,7 @@ class DeployUtils {
             }
           }
 
-          tsm.message({text: "Remove Black list"});
+          tsm.message({text: `Remove Black list: ${JSON.stringify(blacklistedRoutes)}`});
           // Remove all the routes in the black list!
           resources = resources.filter(function (x) {
             return blacklistedRoutes.indexOf(x) < 0
