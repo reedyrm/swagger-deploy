@@ -415,19 +415,19 @@ class DeployUtils {
           for (let index = 0; index < data.items.length; index++) {
             if (data.items[index].hasOwnProperty('resourceMethods')) {
               if (JSON.stringify(data.items[index].resourceMethods).indexOf("GET")) {
-                resources.push(`${data.items[index].path.replace("/", "~1")}/GET`);
+                resources.push(`${data.items[index].path}/GET`);
               }
 
               if (JSON.stringify(data.items[index].resourceMethods).indexOf("POST")) {
-                resources.push(`${data.items[index].path.replace("/", "~1")}/POST`);
+                resources.push(`${data.items[index].path}/POST`);
               }
 
               if (JSON.stringify(data.items[index].resourceMethods).indexOf("PUT")) {
-                resources.push(`${data.items[index].path.replace("/", "~1")}/PUT`);
+                resources.push(`${data.items[index].path}/PUT`);
               }
 
               if (JSON.stringify(data.items[index].resourceMethods).indexOf("DELETE")) {
-                resources.push(`${data.items[index].path.replace("/", "~1")}/DELETE`);
+                resources.push(`${data.items[index].path}/DELETE`);
               }
             }
           }
