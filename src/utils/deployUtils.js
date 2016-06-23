@@ -46,6 +46,10 @@ class DeployUtils {
     this._apiGateway = opts.apiGateway || new AWS.APIGateway(gatewayParams);
   }
 
+  setupCloudFrontDistrubtions(params, callback){
+    // this.cloudfrontService.
+  }
+
   deployApiGatewayToInt(apiGatewayId, callback) {
     this._deployApiGatewayToStage(apiGatewayId,
       constants.env.INTEGRATION.ShortName,

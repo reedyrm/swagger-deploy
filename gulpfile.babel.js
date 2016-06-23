@@ -53,3 +53,8 @@ gulp.task('test:unit:TeamCity', () => {
   return gulp.src('test/**/*.js', {read: false})
     .pipe(mocha({reporter: 'mocha-teamcity-reporter', compilers: 'js:babel-core/register'}));
 });
+
+gulp.task('test:unit:TeamCity:Patten', () => {
+  return gulp.src('test/testingCreationCloudFront.js', {read: false})
+    .pipe(mocha({compilers: 'js:babel-core/register'}));
+});
