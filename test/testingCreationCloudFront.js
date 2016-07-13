@@ -6,8 +6,8 @@ describe('Should Create Cloud Front', function (done) {
     console.log('Creating Cloud Front Distribution');
     let cloudfrontParams = {
       apiVersion: '2016-01-28',
-      accessKeyId: 'AKIAIZPUW7DHGJYAKFMA',
-      secretAccessKey: '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'
+      accessKeyId: 'xxxxxxxxxxxxxxxxx',
+      secretAccessKey: 'DONT PUT SECRET KEYS IN REPOS!'
     };
     let params = {
       comment : 'Test Comment',
